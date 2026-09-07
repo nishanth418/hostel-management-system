@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Types</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Room Type Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Room Types</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Type ID</th>
+                <th>Type Name</th>
+                <th>AC Type</th>
+                <th>Capacity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Room Type</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Room Type</h2>
+
+        <form id="dataForm">
+
+            <label>Type ID</label>
+            <input type="text" id="typeid" required>
+
+            <label>Type Name</label>
+            <input type="text" id="typename">
+
+            <label>AC Type</label>
+            <select id="ac_type">
+                <option value="">Select AC Type</option>
+                <option value="AC">AC</option>
+                <option value="Non-AC">Non-AC</option>
+            </select>
+
+            <label>Capacity</label>
+            <input type="number" id="capacity">
+
+            <button type="submit" id="submitButton">
+                Add Room Type
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let editingId = null;
+        let roomTypeData = [];
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/room-types");
+
+                const data =
+                    await response.json();
+
+                roomTypeData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='5'>No room type records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.typeid ?? "")}</td>
+
+                        <td>${escapeHtml(row.typename ?? "")}</td>
+
+                        <td>${escapeHtml(row.ac_type ?? "")}</td>
+
+                        <td>${escapeHtml(row.capacity ?? "")}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.typeid)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.typeid)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading room types");
+
+            }
+
+        }
+
+        function showForm() {
+
+            if (editingId === null) {
+
+                document.getElementById("dataForm").reset();
+
+                document.getElementById("formTitle").textContent =
+                    "Add Room Type";
+
+                document.getElementById("submitButton").textContent =
+                    "Add Room Type";
+
+            }
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("typeid").disabled =
+                editingId !== null;
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(id) {
+
+            try {
+
+                const row =
+                    roomTypeData.find(
+                        x => x.typeid === id
+                    );
+
+                if (!row) {
+
+                    alert("Room type not found");
+
+                    return;
+
+                }
+
+                editingId = id;
+
+                document.getElementById("typeid").value =
+                    row.typeid ?? "";
+
+                document.getElementById("typename").value =
+                    row.typename ?? "";
+
+                document.getElementById("ac_type").value =
+                    row.ac_type ?? "";
+
+                document.getElementById("capacity").value =
+                    row.capacity ?? "";
+
+                document.getElementById("typeid").disabled =
+                    true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Room Type";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Room Type";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading room type");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        typeid:
+                            document.getElementById("typeid").value.trim(),
+
+                        typename:
+                            document.getElementById("typename").value.trim(),
+
+                        ac_type:
+                            document.getElementById("ac_type").value || null,
+
+                        capacity:
+                            document.getElementById("capacity").value || null
+
+                    };
+
+                    try {
+
+                        const url =
+                            editingId === null
+                                ? "/api/room-types"
+                                : "/api/room-types/" +
+                                encodeURIComponent(editingId);
+
+                        const method =
+                            editingId === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (editingId === null) {
+
+                            alert(
+                                "Room type added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Room type updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Error saving room type");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(id) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete room type " +
+                    id +
+                    "?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/room-types/" +
+                        encodeURIComponent(id),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Room type deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error deleting room type");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            editingId = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("typeid").disabled =
+                false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Room Type";
+
+            document.getElementById("submitButton").textContent =
+                "Add Room Type";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadData();
+
+    </script>
+
+</body>
+
+</html>

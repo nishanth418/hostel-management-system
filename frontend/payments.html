@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Payment Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Payments</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Payment ID</th>
+                <th>Student ID</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Status</th>
+                <th>Payment Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Payment</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Payment</h2>
+
+        <form id="dataForm">
+
+            <label>Payment ID</label>
+            <input type="text" id="paymentid" required>
+
+            <label>Student ID</label>
+            <select id="studentid" required>
+                <option value="">Select Student</option>
+            </select>
+
+            <label>Amount</label>
+            <input type="number" id="amount" min="0" required>
+
+            <label>Payment Method</label>
+            <select id="paymentmethod" required>
+                <option value="">Select Payment Method</option>
+                <option value="UPI">UPI</option>
+                <option value="NetBanking">NetBanking</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="Cash">Cash</option>
+            </select>
+
+            <label>Status</label>
+            <select id="status" required>
+                <option value="">Select Status</option>
+                <option value="Successful">Successful</option>
+                <option value="Pending">Pending</option>
+                <option value="Failed">Failed</option>
+            </select>
+
+            <label>Payment Date</label>
+            <input type="date" id="paymentdate" required>
+
+            <button type="submit" id="submitButton">
+                Add Payment
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let editingId = null;
+        let paymentData = [];
+
+        function formatDate(d) {
+
+            if (!d) {
+                return "";
+            }
+
+            const x = new Date(d);
+
+            return x.getFullYear() +
+                "-" +
+                String(x.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(x.getDate()).padStart(2, "0");
+
+        }
+
+        async function loadStudents() {
+
+            try {
+
+                const response =
+                    await fetch("/api/students");
+
+                const data =
+                    await response.json();
+
+                const select =
+                    document.getElementById("studentid");
+
+                select.innerHTML =
+                    '<option value="">Select Student</option>';
+
+                data.forEach(row => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        row.studentid;
+
+                    option.textContent =
+                        row.studentid +
+                        " - " +
+                        row.studentname;
+
+                    select.appendChild(option);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading students");
+
+            }
+
+        }
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/payments");
+
+                const data =
+                    await response.json();
+
+                paymentData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='7'>No payment records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.paymentid ?? "")}</td>
+
+                        <td>${escapeHtml(row.studentid ?? "")}</td>
+
+                        <td>${escapeHtml(row.amount ?? "")}</td>
+
+                        <td>${escapeHtml(row.paymentmethod ?? "")}</td>
+
+                        <td>${escapeHtml(row.status ?? "")}</td>
+
+                        <td>${formatDate(row.paymentdate)}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.paymentid)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.paymentid)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading payments");
+
+            }
+
+        }
+
+        async function showForm() {
+
+            await loadStudents();
+
+            if (editingId === null) {
+
+                document.getElementById("dataForm").reset();
+
+                document.getElementById("formTitle").textContent =
+                    "Add Payment";
+
+                document.getElementById("submitButton").textContent =
+                    "Add Payment";
+
+            }
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("paymentid").disabled =
+                editingId !== null;
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(id) {
+
+            try {
+
+                const row =
+                    paymentData.find(
+                        x => x.paymentid === id
+                    );
+
+                if (!row) {
+
+                    alert("Payment not found");
+
+                    return;
+
+                }
+
+                editingId = id;
+
+                await loadStudents();
+
+                document.getElementById("paymentid").value =
+                    row.paymentid ?? "";
+
+                document.getElementById("studentid").value =
+                    row.studentid ?? "";
+
+                document.getElementById("amount").value =
+                    row.amount ?? "";
+
+                document.getElementById("paymentmethod").value =
+                    row.paymentmethod ?? "";
+
+                document.getElementById("status").value =
+                    row.status ?? "";
+
+                document.getElementById("paymentdate").value =
+                    formatDate(row.paymentdate);
+
+                document.getElementById("paymentid").disabled =
+                    true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Payment";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Payment";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading payment");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        paymentid:
+                            document.getElementById("paymentid").value.trim(),
+
+                        studentid:
+                            document.getElementById("studentid").value,
+
+                        amount:
+                            document.getElementById("amount").value || null,
+
+                        paymentmethod:
+                            document.getElementById("paymentmethod").value,
+
+                        status:
+                            document.getElementById("status").value,
+
+                        paymentdate:
+                            document.getElementById("paymentdate").value
+
+                    };
+
+                    try {
+
+                        const url =
+                            editingId === null
+                                ? "/api/payments"
+                                : "/api/payments/" +
+                                encodeURIComponent(editingId);
+
+                        const method =
+                            editingId === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (editingId === null) {
+
+                            alert(
+                                "Payment added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Payment updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Error saving payment");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(id) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete payment " +
+                    id +
+                    "?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/payments/" +
+                        encodeURIComponent(id),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Payment deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error deleting payment");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            editingId = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("paymentid").disabled =
+                false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Payment";
+
+            document.getElementById("submitButton").textContent =
+                "Add Payment";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadStudents();
+        loadData();
+
+    </script>
+
+</body>
+
+</html>

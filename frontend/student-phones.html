@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Phones</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Student Phone Management</h1>
+
+    <p>Manage student phone records</p>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <div id="message"></div>
+
+    <div class="result-container">
+
+        <h2>Student Phone Records</h2>
+
+        <button onclick="loadStudentPhones()">Refresh</button>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Phone Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="studentPhoneTableBody">
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Student Phone</button>
+    </div>
+
+    <div class="form-container" id="studentPhoneFormContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Student Phone</h2>
+
+        <form id="studentPhoneForm">
+
+            <label>Student ID</label>
+            <input type="text" id="studentid" required>
+
+            <label>Phone Number</label>
+            <input type="text" id="phoneno" required>
+
+            <button type="submit" id="submitButton">
+                Add Student Phone
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let studentPhones = [];
+        let editingStudentId = null;
+        let editingPhoneNo = null;
+
+        async function loadStudentPhones() {
+
+            try {
+
+                const response = await fetch("/api/student-phones");
+
+                const phones = await response.json();
+
+                studentPhones = phones;
+
+                const tbody =
+                    document.getElementById("studentPhoneTableBody");
+
+                tbody.innerHTML = "";
+
+                if (phones.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='3'>No student phone records found.</td></tr>";
+
+                    return;
+                }
+
+                phones.forEach(phone => {
+
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                        <td>${escapeHtml(phone.studentid ?? "")}</td>
+
+                        <td>${escapeHtml(phone.phoneno ?? "")}</td>
+
+                        <td>
+                            <button onclick="editStudentPhone(
+                                '${escapeJs(phone.studentid)}',
+                                '${escapeJs(phone.phoneno)}'
+                            )">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteStudentPhone(
+                                '${escapeJs(phone.studentid)}',
+                                '${escapeJs(phone.phoneno)}'
+                            )">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(row);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("message").innerHTML =
+                    "<p class='error'>Error loading student phone records.</p>";
+
+            }
+
+        }
+
+        function showForm() {
+
+            editingStudentId = null;
+            editingPhoneNo = null;
+
+            document.getElementById("formTitle").textContent =
+                "Add Student Phone";
+
+            document.getElementById("submitButton").textContent =
+                "Add Student Phone";
+
+            document.getElementById("studentPhoneFormContainer").style.display =
+                "block";
+
+            document.getElementById("studentid").disabled = false;
+
+            document.getElementById("studentPhoneForm").reset();
+
+            window.scrollTo({
+                top: document.getElementById("studentPhoneFormContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        document.getElementById("studentPhoneForm")
+            .addEventListener("submit", async function (event) {
+
+                event.preventDefault();
+
+                const studentPhone = {
+
+                    studentid:
+                        document.getElementById("studentid").value.trim(),
+
+                    phoneno:
+                        document.getElementById("phoneno").value.trim()
+
+                };
+
+                try {
+
+                    let response;
+
+                    if (editingStudentId === null) {
+
+                        response = await fetch(
+                            "/api/student-phones",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(studentPhone)
+                            }
+                        );
+
+                    } else {
+
+                        response = await fetch(
+                            "/api/student-phones/"
+                            + encodeURIComponent(editingStudentId)
+                            + "/"
+                            + encodeURIComponent(editingPhoneNo),
+                            {
+                                method: "PUT",
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(studentPhone)
+                            }
+                        );
+
+                    }
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+
+                        document.getElementById("message").innerHTML =
+                            "<p class='error'>" +
+                            escapeHtml(result.error || "Operation failed") +
+                            "</p>";
+
+                        return;
+
+                    }
+
+                    document.getElementById("message").innerHTML =
+                        "<p class='success'>" +
+                        escapeHtml(
+                            editingStudentId === null
+                                ? "Student phone added successfully"
+                                : "Student phone updated successfully"
+                        ) +
+                        "</p>";
+
+                    resetForm();
+
+                    loadStudentPhones();
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    document.getElementById("message").innerHTML =
+                        "<p class='error'>Server error.</p>";
+
+                }
+
+            });
+
+        async function editStudentPhone(studentId, phoneNo) {
+
+            const phone = studentPhones.find(
+                p =>
+                    p.studentid === studentId &&
+                    p.phoneno === phoneNo
+            );
+
+            if (!phone) {
+
+                alert("Student phone record not found");
+
+                return;
+
+            }
+
+            editingStudentId = studentId;
+            editingPhoneNo = phoneNo;
+
+            document.getElementById("studentid").value =
+                phone.studentid ?? "";
+
+            document.getElementById("phoneno").value =
+                phone.phoneno ?? "";
+
+            document.getElementById("studentid").disabled = true;
+
+            document.getElementById("formTitle").textContent =
+                "Edit Student Phone";
+
+            document.getElementById("submitButton").textContent =
+                "Update Student Phone";
+
+            document.getElementById("studentPhoneFormContainer").style.display =
+                "block";
+
+            window.scrollTo({
+                top: document.getElementById("studentPhoneFormContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function deleteStudentPhone(studentId, phoneNo) {
+
+            const confirmDelete = confirm(
+                "Are you sure you want to delete phone number "
+                + phoneNo
+                + " for student "
+                + studentId
+                + "?"
+            );
+
+            if (!confirmDelete) {
+                return;
+            }
+
+            try {
+
+                const response = await fetch(
+                    "/api/student-phones/"
+                    + encodeURIComponent(studentId)
+                    + "/"
+                    + encodeURIComponent(phoneNo),
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+
+                    document.getElementById("message").innerHTML =
+                        "<p class='error'>" +
+                        escapeHtml(result.error || "Delete failed") +
+                        "</p>";
+
+                    return;
+
+                }
+
+                document.getElementById("message").innerHTML =
+                    "<p class='success'>Student phone deleted successfully</p>";
+
+                loadStudentPhones();
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("message").innerHTML =
+                    "<p class='error'>Server error.</p>";
+
+            }
+
+        }
+
+        function resetForm() {
+
+            editingStudentId = null;
+            editingPhoneNo = null;
+
+            document.getElementById("studentPhoneForm").reset();
+
+            document.getElementById("studentid").disabled = false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Student Phone";
+
+            document.getElementById("submitButton").textContent =
+                "Add Student Phone";
+
+            document.getElementById("studentPhoneFormContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadStudentPhones();
+
+    </script>
+
+</body>
+
+</html>

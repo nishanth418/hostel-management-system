@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostels</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Hostel Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Hostels</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Hostel ID</th>
+                <th>Hostel Name</th>
+                <th>Capacity</th>
+                <th>Warden ID</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Hostel</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Hostel</h2>
+
+        <form id="dataForm">
+
+            <label>Hostel ID</label>
+            <input type="text" id="hostelid" required>
+
+            <label>Hostel Name</label>
+            <input type="text" id="hostelname" required>
+
+            <label>Capacity</label>
+            <input type="number" id="capacity">
+
+            <label>Warden ID</label>
+            <select id="wardenid">
+                <option value="">Select Warden</option>
+            </select>
+
+            <button type="submit" id="submitButton">
+                Add Hostel
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let editingId = null;
+        let hostelData = [];
+
+        async function loadWardens() {
+
+            try {
+
+                const response = await fetch("/api/wardens");
+
+                const wardens = await response.json();
+
+                const wardenSelect =
+                    document.getElementById("wardenid");
+
+                wardenSelect.innerHTML =
+                    '<option value="">Select Warden</option>';
+
+                wardens.forEach(warden => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value = warden.wardenid;
+
+                    option.textContent =
+                        warden.wardenid +
+                        " - " +
+                        warden.wardenname;
+
+                    wardenSelect.appendChild(option);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading wardens");
+
+            }
+
+        }
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/hostels");
+
+                const data =
+                    await response.json();
+
+                hostelData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='5'>No hostel records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.hostelid ?? "")}</td>
+
+                        <td>${escapeHtml(row.hostelname ?? "")}</td>
+
+                        <td>${escapeHtml(row.capacity ?? "")}</td>
+
+                        <td>${escapeHtml(row.wardenid ?? "")}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.hostelid)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.hostelid)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading hostels");
+
+            }
+
+        }
+
+        function showForm() {
+
+            editingId = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("formTitle").textContent =
+                "Add Hostel";
+
+            document.getElementById("submitButton").textContent =
+                "Add Hostel";
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("hostelid").disabled = false;
+
+            loadWardens();
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(id) {
+
+            try {
+
+                const row =
+                    hostelData.find(
+                        x => x.hostelid === id
+                    );
+
+                if (!row) {
+
+                    alert("Hostel not found");
+
+                    return;
+
+                }
+
+                editingId = id;
+
+                await loadWardens();
+
+                document.getElementById("hostelid").value =
+                    row.hostelid ?? "";
+
+                document.getElementById("hostelname").value =
+                    row.hostelname ?? "";
+
+                document.getElementById("capacity").value =
+                    row.capacity ?? "";
+
+                document.getElementById("wardenid").value =
+                    row.wardenid ?? "";
+
+                document.getElementById("hostelid").disabled = true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Hostel";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Hostel";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading hostel");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        hostelid:
+                            document.getElementById("hostelid").value.trim(),
+
+                        hostelname:
+                            document.getElementById("hostelname").value.trim(),
+
+                        capacity:
+                            document.getElementById("capacity").value || null,
+
+                        wardenid:
+                            document.getElementById("wardenid").value || null
+
+                    };
+
+                    try {
+
+                        const url =
+                            editingId === null
+                                ? "/api/hostels"
+                                : "/api/hostels/" +
+                                encodeURIComponent(editingId);
+
+                        const method =
+                            editingId === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (editingId === null) {
+
+                            alert(
+                                "Hostel added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Hostel updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Server error");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(id) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete hostel " +
+                    id +
+                    "?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/hostels/" +
+                        encodeURIComponent(id),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Hostel deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Server error");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            editingId = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("hostelid").disabled = false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Hostel";
+
+            document.getElementById("submitButton").textContent =
+                "Add Hostel";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadWardens();
+        loadData();
+
+    </script>
+
+</body>
+
+</html>

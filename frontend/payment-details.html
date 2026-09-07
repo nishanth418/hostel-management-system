@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Details</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Payment Detail Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Payment Details</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Payment ID</th>
+                <th>Detail ID</th>
+                <th>Month</th>
+                <th>Year</th>
+                <th>Amount</th>
+                <th>Late Fee</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Payment Detail</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Payment Detail</h2>
+
+        <form id="dataForm">
+
+            <label>Payment ID</label>
+            <select id="paymentid" required>
+                <option value="">Select Payment</option>
+            </select>
+
+            <label>Detail ID</label>
+            <input type="text" id="detailid" required>
+
+            <label>Month Name</label>
+            <select id="monthname" required>
+                <option value="">Select Month</option>
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+                <option value="July (Arrears)">July (Arrears)</option>
+                <option value="August (Arrears)">August (Arrears)</option>
+            </select>
+
+            <label>Year</label>
+            <input type="number" id="yearno" min="2000">
+
+            <label>Amount</label>
+            <input type="number" id="amount" min="0">
+
+            <label>Late Fee</label>
+            <input type="number" id="latefee" min="0">
+
+            <button type="submit" id="submitButton">
+                Add Payment Detail
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let oldPayment = null;
+        let oldDetail = null;
+        let paymentDetailData = [];
+
+        async function loadPayments() {
+
+            try {
+
+                const response =
+                    await fetch("/api/payments");
+
+                const data =
+                    await response.json();
+
+                const select =
+                    document.getElementById("paymentid");
+
+                select.innerHTML =
+                    '<option value="">Select Payment</option>';
+
+                data.forEach(row => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        row.paymentid;
+
+                    option.textContent =
+                        row.paymentid +
+                        " - " +
+                        row.studentid +
+                        " - ₹" +
+                        row.amount;
+
+                    select.appendChild(option);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading payments");
+
+            }
+
+        }
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/payment-details");
+
+                const data =
+                    await response.json();
+
+                paymentDetailData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='7'>No payment detail records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.paymentid ?? "")}</td>
+
+                        <td>${escapeHtml(row.detailid ?? "")}</td>
+
+                        <td>${escapeHtml(row.monthname ?? "")}</td>
+
+                        <td>${escapeHtml(row.yearno ?? "")}</td>
+
+                        <td>${escapeHtml(row.amount ?? "")}</td>
+
+                        <td>${escapeHtml(row.latefee ?? "")}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.paymentid)}','${escapeJs(row.detailid)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.paymentid)}','${escapeJs(row.detailid)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading payment details");
+
+            }
+
+        }
+
+        async function showForm() {
+
+            await loadPayments();
+
+            if (oldPayment === null) {
+
+                document.getElementById("dataForm").reset();
+
+                document.getElementById("formTitle").textContent =
+                    "Add Payment Detail";
+
+                document.getElementById("submitButton").textContent =
+                    "Add Payment Detail";
+
+            }
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("paymentid").disabled =
+                oldPayment !== null;
+
+            document.getElementById("detailid").disabled =
+                oldPayment !== null;
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(paymentId, detailId) {
+
+            try {
+
+                const row =
+                    paymentDetailData.find(
+                        x =>
+                            x.paymentid === paymentId &&
+                            x.detailid === detailId
+                    );
+
+                if (!row) {
+
+                    alert("Payment detail not found");
+
+                    return;
+
+                }
+
+                oldPayment = paymentId;
+                oldDetail = detailId;
+
+                await loadPayments();
+
+                document.getElementById("paymentid").value =
+                    row.paymentid ?? "";
+
+                document.getElementById("detailid").value =
+                    row.detailid ?? "";
+
+                document.getElementById("monthname").value =
+                    row.monthname ?? "";
+
+                document.getElementById("yearno").value =
+                    row.yearno ?? "";
+
+                document.getElementById("amount").value =
+                    row.amount ?? "";
+
+                document.getElementById("latefee").value =
+                    row.latefee ?? "";
+
+                document.getElementById("paymentid").disabled =
+                    true;
+
+                document.getElementById("detailid").disabled =
+                    true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Payment Detail";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Payment Detail";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading payment detail");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        paymentid:
+                            document.getElementById("paymentid").value,
+
+                        detailid:
+                            document.getElementById("detailid").value.trim(),
+
+                        monthname:
+                            document.getElementById("monthname").value,
+
+                        yearno:
+                            document.getElementById("yearno").value || null,
+
+                        amount:
+                            document.getElementById("amount").value || null,
+
+                        latefee:
+                            document.getElementById("latefee").value || null
+
+                    };
+
+                    try {
+
+                        const url =
+                            oldPayment === null
+                                ? "/api/payment-details"
+                                : "/api/payment-details/" +
+                                encodeURIComponent(oldPayment) +
+                                "/" +
+                                encodeURIComponent(oldDetail);
+
+                        const method =
+                            oldPayment === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (oldPayment === null) {
+
+                            alert(
+                                "Payment detail added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Payment detail updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Error saving payment detail");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(paymentId, detailId) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete this payment detail?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/payment-details/" +
+                        encodeURIComponent(paymentId) +
+                        "/" +
+                        encodeURIComponent(detailId),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Payment detail deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error deleting payment detail");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            oldPayment = null;
+            oldDetail = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("paymentid").disabled =
+                false;
+
+            document.getElementById("detailid").disabled =
+                false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Payment Detail";
+
+            document.getElementById("submitButton").textContent =
+                "Add Payment Detail";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadPayments();
+        loadData();
+
+    </script>
+
+</body>
+
+</html>

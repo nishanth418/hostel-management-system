@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Student Management</h1>
+
+    <p>Manage student records</p>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <div id="message"></div>
+
+    <div class="result-container">
+
+        <h2>Student Records</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Date of Birth</th>
+                    <th>Email</th>
+                    <th>Blood Group</th>
+                    <th>Meal Plan</th>
+                    <th>Food Preference</th>
+                    <th>Guardian ID</th>
+                    <th>Room ID</th>
+                    <th>Mess ID</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="studentTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <div class="add-button-container">
+        <button onclick="showAddForm()">+ Add Student</button>
+    </div>
+
+    <div class="form-container" id="studentForm" style="display: none;">
+
+        <h2 id="formTitle">Add Student</h2>
+
+        <form onsubmit="saveStudent(event)">
+
+            <label>Student ID</label>
+            <input type="text" id="studentid" required>
+
+            <label>Student Name</label>
+            <input type="text" id="studentname" required>
+
+            <label>Gender</label>
+            <select id="gender" required>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+
+            <label>Date of Birth</label>
+            <input type="date" id="dob" required>
+
+            <label>Email</label>
+            <input type="email" id="email">
+
+            <label>Blood Group</label>
+            <input type="text" id="bloodgroup">
+
+            <label>Meal Plan</label>
+            <input type="text" id="mealplan">
+
+            <label>Food Preference</label>
+            <input type="text" id="foodpreference">
+
+            <label>Guardian ID</label>
+            <input type="text" id="guardianid">
+
+            <label>Room ID</label>
+            <input type="text" id="roomid" required>
+
+            <label>Mess ID</label>
+            <input type="text" id="messid" required>
+
+            <div>
+                <button type="submit">Save Student</button>
+                <button type="button" onclick="cancelForm()">Cancel</button>
+            </div>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let students = [];
+        let editingStudentId = null;
+
+        function loadStudents() {
+
+            fetch("/api/students")
+                .then(response => response.json())
+                .then(data => {
+
+                    students = data;
+                    displayStudents(students);
+
+                })
+                .catch(error => {
+
+                    console.error(error);
+
+                    document.getElementById("message").innerHTML =
+                        "<p class='error'>Unable to load students.</p>";
+
+                });
+        }
+
+        function displayStudents(data) {
+
+            const table = document.getElementById("studentTable");
+
+            table.innerHTML = "";
+
+            if (data.length === 0) {
+
+                table.innerHTML =
+                    "<tr><td colspan='12'>No students found.</td></tr>";
+
+                return;
+            }
+
+            data.forEach(student => {
+
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+
+                    <td>${escapeHtml(student.studentid)}</td>
+
+                    <td>${escapeHtml(student.studentname)}</td>
+
+                    <td>${escapeHtml(student.gender || "")}</td>
+
+                    <td>${formatDate(student.dob)}</td>
+
+                    <td>${escapeHtml(student.email || "")}</td>
+
+                    <td>${escapeHtml(student.bloodgroup || "")}</td>
+
+                    <td>${escapeHtml(student.mealplan || "")}</td>
+
+                    <td>${escapeHtml(student.foodpreference || "")}</td>
+
+                    <td>${escapeHtml(student.guardianid || "")}</td>
+
+                    <td>${escapeHtml(student.roomid || "")}</td>
+
+                    <td>${escapeHtml(student.messid || "")}</td>
+
+                    <td>
+
+                        <button onclick="editStudent('${escapeJs(student.studentid)}')">
+                            Edit
+                        </button>
+
+                        <button onclick="deleteStudent('${escapeJs(student.studentid)}')">
+                            Delete
+                        </button>
+
+                    </td>
+
+                `;
+
+                table.appendChild(row);
+
+            });
+        }
+
+        function showAddForm() {
+
+            editingStudentId = null;
+
+            document.getElementById("formTitle").textContent =
+                "Add Student";
+
+            document.getElementById("studentForm").style.display =
+                "block";
+
+            document.getElementById("studentid").disabled = false;
+
+            clearForm();
+
+            window.scrollTo({
+                top: document.getElementById("studentForm").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        function editStudent(id) {
+
+            const student =
+                students.find(s => s.studentid === id);
+
+            if (!student) {
+                return;
+            }
+
+            editingStudentId = id;
+
+            document.getElementById("formTitle").textContent =
+                "Edit Student";
+
+            document.getElementById("studentForm").style.display =
+                "block";
+
+            document.getElementById("studentid").value =
+                student.studentid;
+
+            document.getElementById("studentid").disabled = true;
+
+            document.getElementById("studentname").value =
+                student.studentname || "";
+
+            document.getElementById("gender").value =
+                student.gender || "";
+
+            document.getElementById("dob").value =
+                formatDateForInput(student.dob);
+
+            document.getElementById("email").value =
+                student.email || "";
+
+            document.getElementById("bloodgroup").value =
+                student.bloodgroup || "";
+
+            document.getElementById("mealplan").value =
+                student.mealplan || "";
+
+            document.getElementById("foodpreference").value =
+                student.foodpreference || "";
+
+            document.getElementById("guardianid").value =
+                student.guardianid || "";
+
+            document.getElementById("roomid").value =
+                student.roomid || "";
+
+            document.getElementById("messid").value =
+                student.messid || "";
+
+            window.scrollTo({
+                top: document.getElementById("studentForm").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        function saveStudent(event) {
+
+            event.preventDefault();
+
+            const student = {
+
+                studentid:
+                    document.getElementById("studentid").value.trim(),
+
+                studentname:
+                    document.getElementById("studentname").value.trim(),
+
+                gender:
+                    document.getElementById("gender").value,
+
+                dob:
+                    document.getElementById("dob").value,
+
+                email:
+                    document.getElementById("email").value.trim(),
+
+                bloodgroup:
+                    document.getElementById("bloodgroup").value.trim(),
+
+                mealplan:
+                    document.getElementById("mealplan").value.trim(),
+
+                foodpreference:
+                    document.getElementById("foodpreference").value.trim(),
+
+                guardianid:
+                    document.getElementById("guardianid").value.trim(),
+
+                roomid:
+                    document.getElementById("roomid").value.trim(),
+
+                messid:
+                    document.getElementById("messid").value.trim()
+
+            };
+
+            const method =
+                editingStudentId ? "PUT" : "POST";
+
+            const url =
+                editingStudentId
+                    ? `/api/students/${encodeURIComponent(editingStudentId)}`
+                    : "/api/students";
+
+            fetch(url, {
+
+                method: method,
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(student)
+
+            })
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    if (data.error) {
+
+                        document.getElementById("message").innerHTML =
+                            "<p class='error'>" +
+                            escapeHtml(data.error) +
+                            "</p>";
+
+                        return;
+                    }
+
+                    document.getElementById("message").innerHTML =
+                        "<p class='success'>" +
+                        escapeHtml(data.message) +
+                        "</p>";
+
+                    cancelForm();
+
+                    loadStudents();
+
+                })
+
+                .catch(error => {
+
+                    console.error(error);
+
+                    document.getElementById("message").innerHTML =
+                        "<p class='error'>Unable to save student.</p>";
+
+                });
+
+        }
+
+        function deleteStudent(id) {
+
+            if (!confirm("Are you sure you want to delete this student?")) {
+                return;
+            }
+
+            fetch(`/api/students/${encodeURIComponent(id)}`, {
+                method: "DELETE"
+            })
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    if (data.error) {
+
+                        document.getElementById("message").innerHTML =
+                            "<p class='error'>" +
+                            escapeHtml(data.error) +
+                            "</p>";
+
+                        return;
+                    }
+
+                    document.getElementById("message").innerHTML =
+                        "<p class='success'>" +
+                        escapeHtml(data.message) +
+                        "</p>";
+
+                    loadStudents();
+
+                })
+
+                .catch(error => {
+
+                    console.error(error);
+
+                    document.getElementById("message").innerHTML =
+                        "<p class='error'>Unable to delete student.</p>";
+
+                });
+
+        }
+
+        function cancelForm() {
+
+            document.getElementById("studentForm").style.display =
+                "none";
+
+            document.getElementById("studentid").disabled = false;
+
+            clearForm();
+
+            editingStudentId = null;
+
+        }
+
+        function clearForm() {
+
+            document.getElementById("studentid").value = "";
+            document.getElementById("studentname").value = "";
+            document.getElementById("gender").value = "";
+            document.getElementById("dob").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("bloodgroup").value = "";
+            document.getElementById("mealplan").value = "";
+            document.getElementById("foodpreference").value = "";
+            document.getElementById("guardianid").value = "";
+            document.getElementById("roomid").value = "";
+            document.getElementById("messid").value = "";
+
+        }
+
+        function formatDate(value) {
+
+            if (!value) {
+                return "";
+            }
+
+            if (
+                typeof value === "string" &&
+                value.includes("T")
+            ) {
+                return value.substring(0, 10);
+            }
+
+            return value;
+
+        }
+
+        function formatDateForInput(value) {
+
+            return formatDate(value);
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadStudents();
+
+    </script>
+
+</body>
+
+</html>

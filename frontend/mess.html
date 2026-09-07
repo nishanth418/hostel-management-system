@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mess</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Mess Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Mess</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Mess ID</th>
+                <th>Mess Name</th>
+                <th>Mess Type</th>
+                <th>Location</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Mess</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Mess</h2>
+
+        <form id="dataForm">
+
+            <label>Mess ID</label>
+            <input type="text" id="messid" required>
+
+            <label>Mess Name</label>
+            <input type="text" id="messname">
+
+            <label>Mess Type</label>
+            <select id="messtype">
+                <option value="">Select Mess Type</option>
+                <option value="Pure Veg">Pure Veg</option>
+                <option value="Non-Veg Special">Non-Veg Special</option>
+                <option value="Mixed">Mixed</option>
+                <option value="Continental">Continental</option>
+                <option value="Quick Bites">Quick Bites</option>
+            </select>
+
+            <label>Location</label>
+            <input type="text" id="location">
+
+            <button type="submit" id="submitButton">
+                Add Mess
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let editingId = null;
+        let messData = [];
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/mess");
+
+                const data =
+                    await response.json();
+
+                messData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='5'>No mess records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.messid ?? "")}</td>
+
+                        <td>${escapeHtml(row.messname ?? "")}</td>
+
+                        <td>${escapeHtml(row.messtype ?? "")}</td>
+
+                        <td>${escapeHtml(row.location ?? "")}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.messid)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.messid)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading mess data");
+
+            }
+
+        }
+
+        function showForm() {
+
+            if (editingId === null) {
+
+                document.getElementById("dataForm").reset();
+
+                document.getElementById("formTitle").textContent =
+                    "Add Mess";
+
+                document.getElementById("submitButton").textContent =
+                    "Add Mess";
+
+            }
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("messid").disabled =
+                editingId !== null;
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(id) {
+
+            try {
+
+                const row =
+                    messData.find(
+                        x => x.messid === id
+                    );
+
+                if (!row) {
+
+                    alert("Mess not found");
+
+                    return;
+
+                }
+
+                editingId = id;
+
+                document.getElementById("messid").value =
+                    row.messid ?? "";
+
+                document.getElementById("messname").value =
+                    row.messname ?? "";
+
+                document.getElementById("messtype").value =
+                    row.messtype ?? "";
+
+                document.getElementById("location").value =
+                    row.location ?? "";
+
+                document.getElementById("messid").disabled =
+                    true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Mess";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Mess";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading mess");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        messid:
+                            document.getElementById("messid").value.trim(),
+
+                        messname:
+                            document.getElementById("messname").value.trim(),
+
+                        messtype:
+                            document.getElementById("messtype").value || null,
+
+                        location:
+                            document.getElementById("location").value.trim()
+
+                    };
+
+                    try {
+
+                        const url =
+                            editingId === null
+                                ? "/api/mess"
+                                : "/api/mess/" +
+                                encodeURIComponent(editingId);
+
+                        const method =
+                            editingId === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (editingId === null) {
+
+                            alert(
+                                "Mess added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Mess updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Error saving mess");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(id) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete mess " +
+                    id +
+                    "?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/mess/" +
+                        encodeURIComponent(id),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Mess deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error deleting mess");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            editingId = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("messid").disabled =
+                false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Mess";
+
+            document.getElementById("submitButton").textContent =
+                "Add Mess";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadData();
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rooms</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Room Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Rooms</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Room ID</th>
+                <th>Floor No</th>
+                <th>Type ID</th>
+                <th>Room Rent</th>
+                <th>Hostel ID</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Room</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Room</h2>
+
+        <form id="dataForm">
+
+            <label>Room ID</label>
+            <input type="text" id="roomid" required>
+
+            <label>Floor No</label>
+            <input type="number" id="floorno">
+
+            <label>Type ID</label>
+            <select id="typeid">
+                <option value="">Select Room Type</option>
+            </select>
+
+            <label>Room Rent</label>
+            <input type="number" id="roomrent">
+
+            <label>Hostel ID</label>
+            <select id="hostelid">
+                <option value="">Select Hostel</option>
+            </select>
+
+            <button type="submit" id="submitButton">
+                Add Room
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let editingId = null;
+        let roomData = [];
+
+        async function loadRoomTypes() {
+
+            try {
+
+                const response =
+                    await fetch("/api/room-types");
+
+                const data =
+                    await response.json();
+
+                const select =
+                    document.getElementById("typeid");
+
+                select.innerHTML =
+                    '<option value="">Select Room Type</option>';
+
+                data.forEach(row => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        row.typeid;
+
+                    option.textContent =
+                        row.typeid +
+                        " - " +
+                        row.typename;
+
+                    select.appendChild(option);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading room types");
+
+            }
+
+        }
+
+        async function loadHostels() {
+
+            try {
+
+                const response =
+                    await fetch("/api/hostels");
+
+                const data =
+                    await response.json();
+
+                const select =
+                    document.getElementById("hostelid");
+
+                select.innerHTML =
+                    '<option value="">Select Hostel</option>';
+
+                data.forEach(row => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        row.hostelid;
+
+                    option.textContent =
+                        row.hostelid +
+                        " - " +
+                        row.hostelname;
+
+                    select.appendChild(option);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading hostels");
+
+            }
+
+        }
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/rooms");
+
+                const data =
+                    await response.json();
+
+                roomData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='6'>No room records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.roomid ?? "")}</td>
+
+                        <td>${escapeHtml(row.floorno ?? "")}</td>
+
+                        <td>${escapeHtml(row.typeid ?? "")}</td>
+
+                        <td>${escapeHtml(row.roomrent ?? "")}</td>
+
+                        <td>${escapeHtml(row.hostelid ?? "")}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.roomid)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.roomid)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading rooms");
+
+            }
+
+        }
+
+        async function showForm() {
+
+            await loadRoomTypes();
+            await loadHostels();
+
+            if (editingId === null) {
+
+                document.getElementById("dataForm").reset();
+
+                document.getElementById("formTitle").textContent =
+                    "Add Room";
+
+                document.getElementById("submitButton").textContent =
+                    "Add Room";
+
+            }
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("roomid").disabled =
+                editingId !== null;
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(id) {
+
+            try {
+
+                const row =
+                    roomData.find(
+                        x => x.roomid === id
+                    );
+
+                if (!row) {
+
+                    alert("Room not found");
+
+                    return;
+
+                }
+
+                editingId = id;
+
+                await loadRoomTypes();
+                await loadHostels();
+
+                document.getElementById("roomid").value =
+                    row.roomid ?? "";
+
+                document.getElementById("floorno").value =
+                    row.floorno ?? "";
+
+                document.getElementById("typeid").value =
+                    row.typeid ?? "";
+
+                document.getElementById("roomrent").value =
+                    row.roomrent ?? "";
+
+                document.getElementById("hostelid").value =
+                    row.hostelid ?? "";
+
+                document.getElementById("roomid").disabled =
+                    true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Room";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Room";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading room");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        roomid:
+                            document.getElementById("roomid").value.trim(),
+
+                        floorno:
+                            document.getElementById("floorno").value || null,
+
+                        typeid:
+                            document.getElementById("typeid").value || null,
+
+                        roomrent:
+                            document.getElementById("roomrent").value || null,
+
+                        hostelid:
+                            document.getElementById("hostelid").value || null
+
+                    };
+
+                    try {
+
+                        const url =
+                            editingId === null
+                                ? "/api/rooms"
+                                : "/api/rooms/" +
+                                encodeURIComponent(editingId);
+
+                        const method =
+                            editingId === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (editingId === null) {
+
+                            alert(
+                                "Room added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Room updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Server error");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(id) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete room " +
+                    id +
+                    "?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/rooms/" +
+                        encodeURIComponent(id),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Room deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Server error");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            editingId = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("roomid").disabled =
+                false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Room";
+
+            document.getElementById("submitButton").textContent =
+                "Add Room";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadRoomTypes();
+        loadHostels();
+        loadData();
+
+    </script>
+
+</body>
+
+</html>

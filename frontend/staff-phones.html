@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Phones</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Staff Phone Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Staff Phones</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Staff ID</th>
+                <th>Phone Number</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Staff Phone</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Staff Phone</h2>
+
+        <form id="dataForm">
+
+            <label>Staff ID</label>
+            <select id="staffid" required>
+                <option value="">Select Staff</option>
+            </select>
+
+            <label>Phone Number</label>
+            <input type="text" id="phoneno" required>
+
+            <button type="submit" id="submitButton">
+                Add Staff Phone
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let oldId = null;
+        let oldPhone = null;
+        let staffPhoneData = [];
+
+        async function loadStaff() {
+
+            try {
+
+                const response =
+                    await fetch("/api/staff");
+
+                const data =
+                    await response.json();
+
+                const select =
+                    document.getElementById("staffid");
+
+                select.innerHTML =
+                    '<option value="">Select Staff</option>';
+
+                data.forEach(row => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        row.staffid;
+
+                    option.textContent =
+                        row.staffid +
+                        " - " +
+                        row.staffname;
+
+                    select.appendChild(option);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading staff");
+
+            }
+
+        }
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/staff-phones");
+
+                const data =
+                    await response.json();
+
+                staffPhoneData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='3'>No staff phone records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.staffid ?? "")}</td>
+
+                        <td>${escapeHtml(row.phoneno ?? "")}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.staffid)}','${escapeJs(row.phoneno)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.staffid)}','${escapeJs(row.phoneno)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading staff phones");
+
+            }
+
+        }
+
+        async function showForm() {
+
+            await loadStaff();
+
+            if (oldId === null) {
+
+                document.getElementById("dataForm").reset();
+
+                document.getElementById("formTitle").textContent =
+                    "Add Staff Phone";
+
+                document.getElementById("submitButton").textContent =
+                    "Add Staff Phone";
+
+            }
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("staffid").disabled =
+                oldId !== null;
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(staffId, phone) {
+
+            try {
+
+                const row =
+                    staffPhoneData.find(
+                        x =>
+                            x.staffid === staffId &&
+                            x.phoneno === phone
+                    );
+
+                if (!row) {
+
+                    alert("Staff phone not found");
+
+                    return;
+
+                }
+
+                oldId = staffId;
+                oldPhone = phone;
+
+                await loadStaff();
+
+                document.getElementById("staffid").value =
+                    row.staffid ?? "";
+
+                document.getElementById("phoneno").value =
+                    row.phoneno ?? "";
+
+                document.getElementById("staffid").disabled =
+                    true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Staff Phone";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Staff Phone";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading staff phone");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        staffid:
+                            document.getElementById("staffid").value,
+
+                        phoneno:
+                            document.getElementById("phoneno").value.trim()
+
+                    };
+
+                    try {
+
+                        const url =
+                            oldId === null
+                                ? "/api/staff-phones"
+                                : "/api/staff-phones/" +
+                                encodeURIComponent(oldId) +
+                                "/" +
+                                encodeURIComponent(oldPhone);
+
+                        const method =
+                            oldId === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (oldId === null) {
+
+                            alert(
+                                "Staff phone added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Staff phone updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Error saving staff phone");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(staffId, phone) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete this staff phone?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/staff-phones/" +
+                        encodeURIComponent(staffId) +
+                        "/" +
+                        encodeURIComponent(phone),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Staff phone deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error deleting staff phone");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            oldId = null;
+            oldPhone = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("staffid").disabled =
+                false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Staff Phone";
+
+            document.getElementById("submitButton").textContent =
+                "Add Staff Phone";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadStaff();
+        loadData();
+
+    </script>
+
+</body>
+
+</html>

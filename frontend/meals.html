@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meals</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Meal Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Meals</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Meal ID</th>
+                <th>Meal Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Mess ID</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Meal</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Meal</h2>
+
+        <form id="dataForm">
+
+            <label>Meal ID</label>
+            <input type="text" id="mealid" required>
+
+            <label>Meal Name</label>
+            <input type="text" id="mealname">
+
+            <label>Description</label>
+            <input type="text" id="description">
+
+            <label>Price</label>
+            <input type="number" id="price">
+
+            <label>Mess ID</label>
+            <select id="messid">
+                <option value="">Select Mess</option>
+            </select>
+
+            <button type="submit" id="submitButton">
+                Add Meal
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let editingId = null;
+        let mealData = [];
+
+        async function loadMess() {
+
+            try {
+
+                const response =
+                    await fetch("/api/mess");
+
+                const data =
+                    await response.json();
+
+                const select =
+                    document.getElementById("messid");
+
+                select.innerHTML =
+                    '<option value="">Select Mess</option>';
+
+                data.forEach(row => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        row.messid;
+
+                    option.textContent =
+                        row.messid +
+                        " - " +
+                        row.messname;
+
+                    select.appendChild(option);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading mess");
+
+            }
+
+        }
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/meals");
+
+                const data =
+                    await response.json();
+
+                mealData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='6'>No meal records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.mealid ?? "")}</td>
+
+                        <td>${escapeHtml(row.mealname ?? "")}</td>
+
+                        <td>${escapeHtml(row.description ?? "")}</td>
+
+                        <td>${escapeHtml(row.price ?? "")}</td>
+
+                        <td>${escapeHtml(row.messid ?? "")}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.mealid)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.mealid)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading meals");
+
+            }
+
+        }
+
+        async function showForm() {
+
+            await loadMess();
+
+            if (editingId === null) {
+
+                document.getElementById("dataForm").reset();
+
+                document.getElementById("formTitle").textContent =
+                    "Add Meal";
+
+                document.getElementById("submitButton").textContent =
+                    "Add Meal";
+
+            }
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("mealid").disabled =
+                editingId !== null;
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(id) {
+
+            try {
+
+                const row =
+                    mealData.find(
+                        x => x.mealid === id
+                    );
+
+                if (!row) {
+
+                    alert("Meal not found");
+
+                    return;
+
+                }
+
+                editingId = id;
+
+                await loadMess();
+
+                document.getElementById("mealid").value =
+                    row.mealid ?? "";
+
+                document.getElementById("mealname").value =
+                    row.mealname ?? "";
+
+                document.getElementById("description").value =
+                    row.description ?? "";
+
+                document.getElementById("price").value =
+                    row.price ?? "";
+
+                document.getElementById("messid").value =
+                    row.messid ?? "";
+
+                document.getElementById("mealid").disabled =
+                    true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Meal";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Meal";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading meal");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        mealid:
+                            document.getElementById("mealid").value.trim(),
+
+                        mealname:
+                            document.getElementById("mealname").value.trim(),
+
+                        description:
+                            document.getElementById("description").value.trim(),
+
+                        price:
+                            document.getElementById("price").value || null,
+
+                        messid:
+                            document.getElementById("messid").value || null
+
+                    };
+
+                    try {
+
+                        const url =
+                            editingId === null
+                                ? "/api/meals"
+                                : "/api/meals/" +
+                                encodeURIComponent(editingId);
+
+                        const method =
+                            editingId === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (editingId === null) {
+
+                            alert(
+                                "Meal added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Meal updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Error saving meal");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(id) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete meal " +
+                    id +
+                    "?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/meals/" +
+                        encodeURIComponent(id),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Meal deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error deleting meal");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            editingId = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("mealid").disabled =
+                false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Meal";
+
+            document.getElementById("submitButton").textContent =
+                "Add Meal";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadMess();
+        loadData();
+
+    </script>
+
+</body>
+
+</html>

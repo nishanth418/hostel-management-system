@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual SQL Query</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Manual SQL Query</h1>
+
+    <p>Enter an Oracle SQL query and execute it on the database.</p>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <div class="query-box">
+
+        <h2>Enter SQL Query</h2>
+
+        <textarea id="sqlQuery" placeholder="example:
+select * from student;"></textarea>
+
+        <div class="query-buttons">
+            <button type="button" onclick="executeQuery()">Execute Query</button>
+            <button type="button" onclick="clearQuery()">Clear</button>
+        </div>
+
+        <div class="examples">
+
+            <h3>Example Queries</h3>
+
+            <button type="button" onclick="setQuery(`select * from student;`)">
+                All Students
+            </button>
+
+            <button type="button" onclick="setQuery(`select * from hostel;`)">
+                All Hostels
+            </button>
+
+            <button type="button" onclick="setQuery(`select * from room;`)">
+                All Rooms
+            </button>
+
+            <button type="button" onclick="setQuery(`select * from mess;`)">
+                All Messes
+            </button>
+
+            <button type="button" onclick="setQuery(`select * from payment;`)">
+                All Payments
+            </button>
+
+            <button type="button" onclick="setQuery(`select count(*) as total_students from student;`)">
+                Count Students
+            </button>
+
+            <button type="button" onclick="setQuery(`select studentname, email from student where gender = 'Male';`)">
+                Male Students
+            </button>
+
+            <button type="button"
+                onclick="setQuery(`select s.studentname, r.roomid from student s join room r on s.roomid = r.roomid;`)">
+                Student Rooms
+            </button>
+
+        </div>
+
+    </div>
+
+    <div id="message"></div>
+
+    <div class="result-container">
+
+        <h2>Query Result</h2>
+
+        <div id="result">
+            <p>Execute a query to display the result.</p>
+        </div>
+
+    </div>
+
+    <script>
+
+        function setQuery(query) {
+            document.getElementById("sqlQuery").value = query;
+        }
+
+
+        function clearQuery() {
+
+            document.getElementById("sqlQuery").value = "";
+
+            document.getElementById("result").innerHTML =
+                "<p>Execute a query to display the result.</p>";
+
+            document.getElementById("message").innerHTML = "";
+        }
+
+
+        async function executeQuery() {
+
+            const sql = document.getElementById("sqlQuery").value.trim();
+
+            const message = document.getElementById("message");
+            const result = document.getElementById("result");
+
+            if (!sql) {
+
+                message.innerHTML =
+                    "<p class='error'>Please enter a SQL query.</p>";
+
+                return;
+            }
+
+            if (!sql.endsWith(";")) {
+
+                message.innerHTML =
+                    "<p class='error'>Please end the SQL query with a semicolon (;).</p>";
+
+                return;
+            }
+
+            message.innerHTML =
+                "<p>Executing query...</p>";
+
+            result.innerHTML = "";
+
+            try {
+
+                const response = await fetch("/api/execute-query", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        sql: sql
+                    })
+
+                });
+
+
+                const data = await response.json();
+
+
+                if (!response.ok || !data.success) {
+
+                    message.innerHTML =
+                        "<p class='error'>Error: " +
+                        escapeHtml(data.error || "Query execution failed.") +
+                        "</p>";
+
+                    return;
+                }
+
+
+                message.innerHTML =
+                    "<p class='success'>Query executed successfully.</p>";
+
+
+                if (data.rowsAffected !== undefined) {
+
+                    result.innerHTML =
+                        "<p><strong>Rows affected:</strong> " +
+                        escapeHtml(String(data.rowsAffected)) +
+                        "</p>";
+
+                } else if (data.rows) {
+
+                    displayResult(data.rows);
+
+                } else {
+
+                    result.innerHTML =
+                        "<p>Query executed successfully.</p>";
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerHTML =
+                    "<p class='error'>Unable to execute query.</p>";
+
+                result.innerHTML = "";
+
+            }
+
+        }
+
+
+        function displayResult(rows) {
+
+            const result = document.getElementById("result");
+
+
+            if (!rows || rows.length === 0) {
+
+                result.innerHTML =
+                    "<p>No records found.</p>";
+
+                return;
+            }
+
+
+            const columns = Object.keys(rows[0]);
+
+
+            let table = "<table>";
+
+
+            table += "<thead>";
+            table += "<tr>";
+
+
+            columns.forEach(column => {
+
+                table +=
+                    "<th>" +
+                    escapeHtml(column) +
+                    "</th>";
+
+            });
+
+
+            table += "</tr>";
+            table += "</thead>";
+
+
+            table += "<tbody>";
+
+
+            rows.forEach(row => {
+
+                table += "<tr>";
+
+
+                columns.forEach(column => {
+
+                    let value = row[column];
+
+
+                    if (value === null || value === undefined) {
+                        value = "";
+                    }
+
+
+                    if (
+                        typeof value === "string" &&
+                        /^\d{4}-\d{2}-\d{2}T/.test(value)
+                    ) {
+
+                        value = value.substring(0, 10);
+
+                    }
+
+
+                    table +=
+                        "<td>" +
+                        escapeHtml(String(value)) +
+                        "</td>";
+
+                });
+
+
+                table += "</tr>";
+
+            });
+
+
+            table += "</tbody>";
+            table += "</table>";
+
+
+            result.innerHTML = table;
+        }
+
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Reports</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+    <h1>Hostel Management Reports</h1>
+    <a href="/" class="back">← Back to Dashboard</a>
+    <h2>1. Student Hostel Report</h2>
+    <table id="studentHostelReport">
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Gender</th>
+                <th>Room ID</th>
+                <th>Hostel Name</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>2. Student Payment Report</h2>
+    <table id="studentPaymentReport">
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Payment ID</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Status</th>
+                <th>Payment Date</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>3. Hostel Occupancy Report</h2>
+    <table id="hostelOccupancyReport">
+        <thead>
+            <tr>
+                <th>Hostel ID</th>
+                <th>Hostel Name</th>
+                <th>Capacity</th>
+                <th>Occupied</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>4. Mess Meal Report</h2>
+    <table id="messMealReport">
+        <thead>
+            <tr>
+                <th>Mess ID</th>
+                <th>Mess Name</th>
+                <th>Mess Type</th>
+                <th>Meal ID</th>
+                <th>Meal Name</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>5. Staff Mess Report</h2>
+    <table id="staffMessReport">
+        <thead>
+            <tr>
+                <th>Staff ID</th>
+                <th>Staff Name</th>
+                <th>Designation</th>
+                <th>Salary</th>
+                <th>Mess ID</th>
+                <th>Mess Name</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>6. Procurement Report</h2>
+    <table id="procurementReport">
+        <thead>
+            <tr>
+                <th>Mess Name</th>
+                <th>Supplier Name</th>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>7. Payment Details Report</h2>
+    <table id="paymentDetailsReport">
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Payment ID</th>
+                <th>Payment Method</th>
+                <th>Status</th>
+                <th>Detail ID</th>
+                <th>Month</th>
+                <th>Year</th>
+                <th>Amount</th>
+                <th>Late Fee</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>8. Warden Hostel Report</h2>
+    <table id="wardenHostelReport">
+        <thead>
+            <tr>
+                <th>Warden ID</th>
+                <th>Warden Name</th>
+                <th>Email</th>
+                <th>Hostel ID</th>
+                <th>Hostel Name</th>
+                <th>Capacity</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src="reports.js"></script>
+
+</body>
+
+</html>

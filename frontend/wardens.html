@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wardens</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/students">Students</a>
+        <a href="/hostels">Hostels</a>
+        <a href="/mess">Mess</a>
+        <a href="/payments">Payments</a>
+        <a href="/reports">Reports</a>
+        <a href="/queries">SQL Query</a>
+    </nav>
+
+    <h1>Warden Management</h1>
+
+    <a href="/" class="back">← Back to Dashboard</a>
+
+    <h2>Wardens</h2>
+
+    <button onclick="loadData()">Refresh</button>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Warden ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Joining Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+    <div class="add-button-container">
+        <button onclick="showForm()">+ Add Warden</button>
+    </div>
+
+    <div class="form-container" id="formContainer" style="display: none;">
+
+        <h2 id="formTitle">Add Warden</h2>
+
+        <form id="dataForm">
+
+            <label>Warden ID</label>
+            <input type="text" id="wardenid" required>
+
+            <label>Warden Name</label>
+            <input type="text" id="wardenname">
+
+            <label>Email</label>
+            <input type="email" id="email">
+
+            <label>Joining Date</label>
+            <input type="date" id="joiningdate">
+
+            <button type="submit" id="submitButton">
+                Add Warden
+            </button>
+
+            <button type="button" onclick="resetForm()">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        let editingId = null;
+        let wardenData = [];
+
+        function formatDate(d) {
+
+            if (!d) {
+                return "";
+            }
+
+            const x = new Date(d);
+
+            return x.getFullYear() +
+                "-" +
+                String(x.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(x.getDate()).padStart(2, "0");
+
+        }
+
+        async function loadData() {
+
+            try {
+
+                const response =
+                    await fetch("/api/wardens");
+
+                const data =
+                    await response.json();
+
+                wardenData = data;
+
+                const tbody =
+                    document.getElementById("tableBody");
+
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='5'>No warden records found.</td></tr>";
+
+                    return;
+
+                }
+
+                data.forEach(row => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.wardenid ?? "")}</td>
+
+                        <td>${escapeHtml(row.wardenname ?? "")}</td>
+
+                        <td>${escapeHtml(row.email ?? "")}</td>
+
+                        <td>${formatDate(row.joiningdate)}</td>
+
+                        <td>
+                            <button onclick="editData('${escapeJs(row.wardenid)}')">
+                                Edit
+                            </button>
+
+                            <button onclick="deleteData('${escapeJs(row.wardenid)}')">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(tr);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading wardens");
+
+            }
+
+        }
+
+        function showForm() {
+
+            if (editingId === null) {
+
+                document.getElementById("dataForm").reset();
+
+                document.getElementById("formTitle").textContent =
+                    "Add Warden";
+
+                document.getElementById("submitButton").textContent =
+                    "Add Warden";
+
+            }
+
+            document.getElementById("formContainer").style.display =
+                "block";
+
+            document.getElementById("wardenid").disabled =
+                editingId !== null;
+
+            window.scrollTo({
+                top: document.getElementById("formContainer").offsetTop,
+                behavior: "smooth"
+            });
+
+        }
+
+        async function editData(id) {
+
+            try {
+
+                const row =
+                    wardenData.find(
+                        x => x.wardenid === id
+                    );
+
+                if (!row) {
+
+                    alert("Warden not found");
+
+                    return;
+
+                }
+
+                editingId = id;
+
+                document.getElementById("wardenid").value =
+                    row.wardenid ?? "";
+
+                document.getElementById("wardenname").value =
+                    row.wardenname ?? "";
+
+                document.getElementById("email").value =
+                    row.email ?? "";
+
+                document.getElementById("joiningdate").value =
+                    formatDate(row.joiningdate);
+
+                document.getElementById("wardenid").disabled =
+                    true;
+
+                document.getElementById("formTitle").textContent =
+                    "Edit Warden";
+
+                document.getElementById("submitButton").textContent =
+                    "Update Warden";
+
+                document.getElementById("formContainer").style.display =
+                    "block";
+
+                window.scrollTo({
+                    top: document.getElementById("formContainer").offsetTop,
+                    behavior: "smooth"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error loading warden");
+
+            }
+
+        }
+
+        document.getElementById("dataForm")
+            .addEventListener(
+                "submit",
+                async function (e) {
+
+                    e.preventDefault();
+
+                    const data = {
+
+                        wardenid:
+                            document.getElementById("wardenid").value.trim(),
+
+                        wardenname:
+                            document.getElementById("wardenname").value.trim(),
+
+                        email:
+                            document.getElementById("email").value.trim(),
+
+                        joiningdate:
+                            document.getElementById("joiningdate").value || null
+
+                    };
+
+                    try {
+
+                        const url =
+                            editingId === null
+                                ? "/api/wardens"
+                                : "/api/wardens/" +
+                                encodeURIComponent(editingId);
+
+                        const method =
+                            editingId === null
+                                ? "POST"
+                                : "PUT";
+
+                        const response =
+                            await fetch(url, {
+
+                                method: method,
+
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+
+                                body: JSON.stringify(data)
+
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            alert(
+                                result.error ||
+                                "Operation failed"
+                            );
+
+                            return;
+
+                        }
+
+                        if (editingId === null) {
+
+                            alert(
+                                "Warden added successfully"
+                            );
+
+                        } else {
+
+                            alert(
+                                "Warden updated successfully"
+                            );
+
+                        }
+
+                        resetForm();
+
+                        loadData();
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert("Error saving warden");
+
+                    }
+
+                }
+            );
+
+        async function deleteData(id) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to delete warden " +
+                    id +
+                    "?"
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/wardens/" +
+                        encodeURIComponent(id),
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    alert(
+                        result.error ||
+                        "Delete failed"
+                    );
+
+                    return;
+
+                }
+
+                alert(
+                    "Warden deleted successfully"
+                );
+
+                loadData();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error deleting warden");
+
+            }
+
+        }
+
+        function resetForm() {
+
+            editingId = null;
+
+            document.getElementById("dataForm").reset();
+
+            document.getElementById("wardenid").disabled =
+                false;
+
+            document.getElementById("formTitle").textContent =
+                "Add Warden";
+
+            document.getElementById("submitButton").textContent =
+                "Add Warden";
+
+            document.getElementById("formContainer").style.display =
+                "none";
+
+        }
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        }
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replaceAll("\\", "\\\\")
+                .replaceAll("'", "\\'");
+
+        }
+
+        loadData();
+
+    </script>
+
+</body>
+
+</html>
