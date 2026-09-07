@@ -4,202 +4,515 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hostel Management System</title>
+    <title>Hostel Management System - Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="config.js"></script>
+    <script src="app.js"></script>
 </head>
 
-<body>
+<body data-page="dashboard">
 
+    <!-- Ambient Animated Background -->
+    <div class="ambient-canvas" aria-hidden="true">
+        <div class="ambient-grid"></div>
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-orb orb-4"></div>
+    </div>
+
+    <!-- Main Navigation Bar -->
     <nav class="navbar">
-        <a href="/">Home</a>
-        <a href="/students">Students</a>
-        <a href="/hostels">Hostels</a>
-        <a href="/mess">Mess</a>
-        <a href="/payments">Payments</a>
-        <a href="/reports">Reports</a>
-        <a href="/queries">SQL Query</a>
+        <a href="/" class="nav-brand">
+            <div class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <div>
+                <span class="brand-title">Hostel Management</span>
+                <span class="brand-badge">Pro</span>
+            </div>
+        </a>
+
+        <button class="mobile-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
+
+        <div class="nav-menu">
+            <a href="/" class="nav-link active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                Dashboard
+            </a>
+            <a href="/students" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                Students
+            </a>
+            <a href="/hostels" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line></svg>
+                Hostels
+            </a>
+            <a href="/mess" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path></svg>
+                Mess
+            </a>
+            <a href="/payments" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                Payments
+            </a>
+            <a href="/reports" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Reports
+            </a>
+            <a href="/queries" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                SQL Query
+            </a>
+        </div>
+
+        <div class="nav-actions">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Render API Live</span>
+            </div>
+        </div>
     </nav>
 
-    <h1>Hostel Management System</h1>
+    <!-- Subnav Explorer -->
+    <div class="subnav-bar">
+        <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-right: 4px;">Explore:</span>
+        <a href="/students" class="subnav-pill">Students</a>
+        <a href="/student-phones" class="subnav-pill">Student Phones</a>
+        <a href="/hostels" class="subnav-pill">Hostels</a>
+        <a href="/rooms" class="subnav-pill">Rooms</a>
+        <a href="/room-types" class="subnav-pill">Room Types</a>
+        <a href="/wardens" class="subnav-pill">Wardens</a>
+        <a href="/warden-phones" class="subnav-pill">Warden Phones</a>
+        <a href="/mess" class="subnav-pill">Mess</a>
+        <a href="/mess-contacts" class="subnav-pill">Mess Contacts</a>
+        <a href="/meals" class="subnav-pill">Meals</a>
+        <a href="/staff" class="subnav-pill">Staff</a>
+        <a href="/staff-phones" class="subnav-pill">Staff Phones</a>
+        <a href="/suppliers" class="subnav-pill">Suppliers</a>
+        <a href="/supplier-phones" class="subnav-pill">Supplier Phones</a>
+        <a href="/inventory" class="subnav-pill">Inventory</a>
+        <a href="/procures" class="subnav-pill">Procures</a>
+        <a href="/payments" class="subnav-pill">Payments</a>
+        <a href="/payment-details" class="subnav-pill">Payment Details</a>
+        <a href="/reports" class="subnav-pill">Reports</a>
+        <a href="/queries" class="subnav-pill">SQL Query</a>
+    </div>
 
-    <p>Database Management Dashboard</p>
+    <div class="page-container">
+        
+        <!-- Hero Section -->
+        <section class="dashboard-hero">
+            <div class="hero-glow"></div>
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Live PostgreSQL Cloud Database
+                </div>
+                <h1 class="hero-title">Hostel Management System</h1>
+                <p class="hero-subtitle">Database Management Dashboard</p>
+                <div class="hero-actions">
+                    <a href="/students" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                        Manage Students
+                    </a>
+                    <a href="/reports" class="btn btn-secondary" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.25);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        View Reports
+                    </a>
+                    <a href="/queries" class="btn btn-secondary" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.25);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                        SQL Query
+                    </a>
+                </div>
+            </div>
+        </section>
 
+        <!-- 1. Students -->
+        <div class="section-header">
+            <div class="section-title">
+                <span class="section-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </span>
+                Students
+            </div>
+            <span class="section-count">2 modules</span>
+        </div>
 
-    <!-- student management -->
+        <div class="dashboard-grid">
+            <a href="/students" class="stat-card" style="--delay: 1;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Students</h2>
+                        <p>Registered Residents</p>
+                    </div>
+                    <div class="card-icon icon-blue">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="studentCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
 
-    <h2 class="section-title">Student Management</h2>
+            <a href="/student-phones" class="stat-card" style="--delay: 2;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Student Phones</h2>
+                        <p>Phone Contacts</p>
+                    </div>
+                    <div class="card-icon icon-cyan">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="studentPhoneCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+        </div>
 
-    <div class="dashboard">
+        <!-- 2. Hostels -->
+        <div class="section-header">
+            <div class="section-title">
+                <span class="section-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line></svg>
+                </span>
+                Hostels
+            </div>
+            <span class="section-count">5 modules</span>
+        </div>
 
-        <a href="/students" class="card">
-            <h2>Students</h2>
-            <h3 id="studentCount">0</h3>
-            <p>Manage student records</p>
-        </a>
+        <div class="dashboard-grid">
+            <a href="/hostels" class="stat-card" style="--delay: 3;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Hostels</h2>
+                        <p>Hostel Blocks</p>
+                    </div>
+                    <div class="card-icon icon-indigo">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="hostelCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
 
-        <a href="/student-phones" class="card">
-            <h2>Student Phones</h2>
-            <h3 id="studentPhoneCount">0</h3>
-            <p>Manage student phone numbers</p>
-        </a>
+            <a href="/rooms" class="stat-card" style="--delay: 4;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Rooms</h2>
+                        <p>Hostel Rooms</p>
+                    </div>
+                    <div class="card-icon icon-blue">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="roomCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/room-types" class="stat-card" style="--delay: 5;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Room Types</h2>
+                        <p>Room Classifications</p>
+                    </div>
+                    <div class="card-icon icon-purple">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="roomTypeCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/wardens" class="stat-card" style="--delay: 6;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Wardens</h2>
+                        <p>Hostel Wardens</p>
+                    </div>
+                    <div class="card-icon icon-emerald">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="wardenCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/warden-phones" class="stat-card" style="--delay: 7;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Warden Phones</h2>
+                        <p>Warden Contacts</p>
+                    </div>
+                    <div class="card-icon icon-cyan">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="wardenPhoneCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 3. Mess -->
+        <div class="section-header">
+            <div class="section-title">
+                <span class="section-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path></svg>
+                </span>
+                Mess
+            </div>
+            <span class="section-count">3 modules</span>
+        </div>
+
+        <div class="dashboard-grid">
+            <a href="/mess" class="stat-card" style="--delay: 8;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Mess</h2>
+                        <p>Dining Halls</p>
+                    </div>
+                    <div class="card-icon icon-amber">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="messCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/mess-contacts" class="stat-card" style="--delay: 9;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Mess Contacts</h2>
+                        <p>Dining Hotlines</p>
+                    </div>
+                    <div class="card-icon icon-rose">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="messContactCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/meals" class="stat-card" style="--delay: 10;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Meals</h2>
+                        <p>Menu Plans & Pricing</p>
+                    </div>
+                    <div class="card-icon icon-amber">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="mealCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 4. Staff -->
+        <div class="section-header">
+            <div class="section-title">
+                <span class="section-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </span>
+                Staff
+            </div>
+            <span class="section-count">2 modules</span>
+        </div>
+
+        <div class="dashboard-grid">
+            <a href="/staff" class="stat-card" style="--delay: 11;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Staff</h2>
+                        <p>Mess & Facility Staff</p>
+                    </div>
+                    <div class="card-icon icon-emerald">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="staffCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/staff-phones" class="stat-card" style="--delay: 12;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Staff Phones</h2>
+                        <p>Staff Contacts</p>
+                    </div>
+                    <div class="card-icon icon-cyan">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="staffPhoneCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 5. Suppliers -->
+        <div class="section-header">
+            <div class="section-title">
+                <span class="section-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                </span>
+                Suppliers
+            </div>
+            <span class="section-count">2 modules</span>
+        </div>
+
+        <div class="dashboard-grid">
+            <a href="/suppliers" class="stat-card" style="--delay: 13;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Suppliers</h2>
+                        <p>Vendors & Contractors</p>
+                    </div>
+                    <div class="card-icon icon-purple">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="supplierCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/supplier-phones" class="stat-card" style="--delay: 14;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Supplier Phones</h2>
+                        <p>Vendor Contacts</p>
+                    </div>
+                    <div class="card-icon icon-cyan">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="supplierPhoneCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 6. Inventory -->
+        <div class="section-header">
+            <div class="section-title">
+                <span class="section-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                </span>
+                Inventory
+            </div>
+            <span class="section-count">2 modules</span>
+        </div>
+
+        <div class="dashboard-grid">
+            <a href="/inventory" class="stat-card" style="--delay: 15;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Inventory</h2>
+                        <p>Stock & Supplies</p>
+                    </div>
+                    <div class="card-icon icon-emerald">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="inventoryCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/procures" class="stat-card" style="--delay: 16;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Procures</h2>
+                        <p>Procurement Orders</p>
+                    </div>
+                    <div class="card-icon icon-blue">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="procuresCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 7. Payments -->
+        <div class="section-header">
+            <div class="section-title">
+                <span class="section-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                </span>
+                Payments
+            </div>
+            <span class="section-count">2 modules</span>
+        </div>
+
+        <div class="dashboard-grid">
+            <a href="/payments" class="stat-card" style="--delay: 17;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Payments</h2>
+                        <p>Student Payments</p>
+                    </div>
+                    <div class="card-icon icon-rose">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="paymentCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+
+            <a href="/payment-details" class="stat-card" style="--delay: 18;">
+                <div class="card-top">
+                    <div class="card-header-text">
+                        <h2>Payment Details</h2>
+                        <p>Payment Breakdowns</p>
+                    </div>
+                    <div class="card-icon icon-amber">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                </div>
+                <div class="card-bottom">
+                    <div class="counter-val" id="paymentDetailCount">0</div>
+                    <div class="card-action">View records <span>→</span></div>
+                </div>
+            </a>
+        </div>
 
     </div>
 
-
-    <!-- hostel management -->
-
-    <h2 class="section-title">Hostel Management</h2>
-
-    <div class="dashboard">
-
-        <a href="/hostels" class="card">
-            <h2>Hostels</h2>
-            <h3 id="hostelCount">0</h3>
-            <p>Manage hostels</p>
-        </a>
-
-        <a href="/rooms" class="card">
-            <h2>Rooms</h2>
-            <h3 id="roomCount">0</h3>
-            <p>Manage hostel rooms</p>
-        </a>
-
-        <a href="/room-types" class="card">
-            <h2>Room Types</h2>
-            <h3 id="roomTypeCount">0</h3>
-            <p>Manage room types</p>
-        </a>
-
-        <a href="/wardens" class="card">
-            <h2>Wardens</h2>
-            <h3 id="wardenCount">0</h3>
-            <p>Manage hostel wardens</p>
-        </a>
-
-        <a href="/warden-phones" class="card">
-            <h2>Warden Phones</h2>
-            <h3 id="wardenPhoneCount">0</h3>
-            <p>Manage warden phone numbers</p>
-        </a>
-
-    </div>
-
-
-    <!-- mess management -->
-
-    <h2 class="section-title">Mess Management</h2>
-
-    <div class="dashboard">
-
-        <a href="/mess" class="card">
-            <h2>Mess</h2>
-            <h3 id="messCount">0</h3>
-            <p>Manage mess facilities</p>
-        </a>
-
-        <a href="/mess-contacts" class="card">
-            <h2>Mess Contacts</h2>
-            <h3 id="messContactCount">0</h3>
-            <p>Manage mess contact numbers</p>
-        </a>
-
-        <a href="/meals" class="card">
-            <h2>Meals</h2>
-            <h3 id="mealCount">0</h3>
-            <p>Manage meal records</p>
-        </a>
-
-        <a href="/staff" class="card">
-            <h2>Staff</h2>
-            <h3 id="staffCount">0</h3>
-            <p>Manage mess staff</p>
-        </a>
-
-        <a href="/staff-phones" class="card">
-            <h2>Staff Phones</h2>
-            <h3 id="staffPhoneCount">0</h3>
-            <p>Manage staff phone numbers</p>
-        </a>
-
-    </div>
-
-
-    <!-- inventory and procurement -->
-
-    <h2 class="section-title">Inventory & Procurement</h2>
-
-    <div class="dashboard">
-
-        <a href="/suppliers" class="card">
-            <h2>Suppliers</h2>
-            <h3 id="supplierCount">0</h3>
-            <p>Manage suppliers</p>
-        </a>
-
-        <a href="/supplier-phones" class="card">
-            <h2>Supplier Phones</h2>
-            <h3 id="supplierPhoneCount">0</h3>
-            <p>Manage supplier phone numbers</p>
-        </a>
-
-        <a href="/inventory" class="card">
-            <h2>Inventory</h2>
-            <h3 id="inventoryCount">0</h3>
-            <p>Manage inventory items</p>
-        </a>
-
-        <a href="/procures" class="card">
-            <h2>Procurement</h2>
-            <h3 id="procuresCount">0</h3>
-            <p>Manage procurement records</p>
-        </a>
-
-    </div>
-
-
-    <!-- payment management -->
-
-    <h2 class="section-title">Payment Management</h2>
-
-    <div class="dashboard">
-
-        <a href="/payments" class="card">
-            <h2>Payments</h2>
-            <h3 id="paymentCount">0</h3>
-            <p>Manage student payments</p>
-        </a>
-
-        <a href="/payment-details" class="card">
-            <h2>Payment Details</h2>
-            <h3 id="paymentDetailCount">0</h3>
-            <p>Manage payment details</p>
-        </a>
-
-    </div>
-
-
-    <!-- reports -->
-
-    <h2 class="section-title">Reports & SQL</h2>
-
-    <div class="dashboard">
-
-        <a href="/reports" class="card">
-            <h2>Reports</h2>
-            <h3>→</h3>
-            <p>View database reports</p>
-        </a>
-
-        <a href="/queries" class="card">
-            <h2>SQL Query</h2>
-            <h3>→</h3>
-            <p>Execute SQL queries</p>
-        </a>
-
-    </div>
-
-
+    <!-- Script for dashboard counts -->
     <script src="script.js"></script>
 
 </body>

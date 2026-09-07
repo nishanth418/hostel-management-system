@@ -1,24 +1,40 @@
+// frontend/script.js
+// Fetches dashboard overview stats from Render backend and animates counter numbers
+
 fetch("/api/dashboard")
     .then(response => response.json())
     .then(data => {
-        document.getElementById("studentCount").textContent = data.students;
-        document.getElementById("studentPhoneCount").textContent = data.studentphones;
-        document.getElementById("hostelCount").textContent = data.hostels;
-        document.getElementById("roomCount").textContent = data.rooms;
-        document.getElementById("roomTypeCount").textContent = data.roomtypes;
-        document.getElementById("messCount").textContent = data.mess;
-        document.getElementById("messContactCount").textContent = data.messcontacts;
-        document.getElementById("mealCount").textContent = data.meals;
-        document.getElementById("staffCount").textContent = data.staff;
-        document.getElementById("staffPhoneCount").textContent = data.staffphones;
-        document.getElementById("wardenCount").textContent = data.wardens;
-        document.getElementById("wardenPhoneCount").textContent = data.wardenphones;
-        document.getElementById("supplierCount").textContent = data.suppliers;
-        document.getElementById("supplierPhoneCount").textContent = data.supplierphones;
-        document.getElementById("inventoryCount").textContent = data.inventory;
-        document.getElementById("procuresCount").textContent = data.procures;
-        document.getElementById("paymentCount").textContent = data.payments;
-        document.getElementById("paymentDetailCount").textContent = data.paymentdetails;
+        const counts = [
+            { id: "studentCount", val: data.students },
+            { id: "studentPhoneCount", val: data.studentphones },
+            { id: "hostelCount", val: data.hostels },
+            { id: "roomCount", val: data.rooms },
+            { id: "roomTypeCount", val: data.roomtypes },
+            { id: "messCount", val: data.mess },
+            { id: "messContactCount", val: data.messcontacts },
+            { id: "mealCount", val: data.meals },
+            { id: "staffCount", val: data.staff },
+            { id: "staffPhoneCount", val: data.staffphones },
+            { id: "wardenCount", val: data.wardens },
+            { id: "wardenPhoneCount", val: data.wardenphones },
+            { id: "supplierCount", val: data.suppliers },
+            { id: "supplierPhoneCount", val: data.supplierphones },
+            { id: "inventoryCount", val: data.inventory },
+            { id: "procuresCount", val: data.procures },
+            { id: "paymentCount", val: data.payments },
+            { id: "paymentDetailCount", val: data.paymentdetails }
+        ];
+
+        counts.forEach(item => {
+            const el = document.getElementById(item.id);
+            if (el) {
+                if (typeof window.animateCount === "function") {
+                    window.animateCount(el, item.val, 700);
+                } else {
+                    el.textContent = item.val;
+                }
+            }
+        });
     })
     .catch(error => {
         console.error("error loading dashboard:", error);

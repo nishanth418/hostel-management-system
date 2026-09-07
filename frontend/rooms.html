@@ -4,35 +4,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rooms</title>
+    <title>Rooms - Hostel Management System</title>
     <link rel="stylesheet" href="style.css">
     <script src="config.js"></script>
+    <script src="app.js"></script>
 </head>
 
-<body>
+<body data-page="rooms">
 
+    <!-- Ambient Animated Background -->
+    <div class="ambient-canvas" aria-hidden="true">
+        <div class="ambient-grid"></div>
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-orb orb-4"></div>
+    </div>
+
+    <!-- Main Navigation Bar -->
     <nav class="navbar">
-        <a href="/">Home</a>
-        <a href="/students">Students</a>
-        <a href="/hostels">Hostels</a>
-        <a href="/mess">Mess</a>
-        <a href="/payments">Payments</a>
-        <a href="/reports">Reports</a>
-        <a href="/queries">SQL Query</a>
+        <a href="/" class="nav-brand">
+            <div class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <div>
+                <span class="brand-title">Hostel Management</span>
+                <span class="brand-badge">Pro</span>
+            </div>
+        </a>
+
+        <button class="mobile-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
+
+        <div class="nav-menu">
+            <a href="/" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                Dashboard
+            </a>
+            <a href="/students" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                Students
+            </a>
+            <a href="/hostels" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line></svg>
+                Hostels
+            </a>
+            <a href="/mess" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path></svg>
+                Mess
+            </a>
+            <a href="/payments" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                Payments
+            </a>
+            <a href="/reports" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Reports
+            </a>
+            <a href="/queries" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                SQL Query
+            </a>
+        </div>
+
+        <div class="nav-actions">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Render API Live</span>
+            </div>
+        </div>
     </nav>
 
-    <h1>Room Management</h1>
+    <!-- Subnav Explorer -->
+    <div class="subnav-bar">
+        <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-right: 4px;">Explore:</span>
+        <a href="/students" class="subnav-pill">Students</a>
+        <a href="/student-phones" class="subnav-pill">Student Phones</a>
+        <a href="/hostels" class="subnav-pill">Hostels</a>
+        <a href="/rooms" class="subnav-pill">Rooms</a>
+        <a href="/room-types" class="subnav-pill">Room Types</a>
+        <a href="/wardens" class="subnav-pill">Wardens</a>
+        <a href="/warden-phones" class="subnav-pill">Warden Phones</a>
+        <a href="/mess" class="subnav-pill">Mess</a>
+        <a href="/mess-contacts" class="subnav-pill">Mess Contacts</a>
+        <a href="/meals" class="subnav-pill">Meals</a>
+        <a href="/staff" class="subnav-pill">Staff</a>
+        <a href="/staff-phones" class="subnav-pill">Staff Phones</a>
+        <a href="/suppliers" class="subnav-pill">Suppliers</a>
+        <a href="/supplier-phones" class="subnav-pill">Supplier Phones</a>
+        <a href="/inventory" class="subnav-pill">Inventory</a>
+        <a href="/procures" class="subnav-pill">Procures</a>
+        <a href="/payments" class="subnav-pill">Payments</a>
+        <a href="/payment-details" class="subnav-pill">Payment Details</a>
+        <a href="/reports" class="subnav-pill">Reports</a>
+        <a href="/queries" class="subnav-pill">SQL Query</a>
+    </div>
 
-    <a href="/" class="back">← Back to Dashboard</a>
+    <div class="page-container">
 
-    <h2>Rooms</h2>
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <div class="breadcrumb-trail">
+                    <a href="/">Dashboard</a>
+                    <span>/</span>
+                    <span style="color: #cbd5e1; font-weight: 600;">Rooms</span>
+                </div>
+                <h1 class="page-header-title">Rooms</h1>
+                <p class="page-header-subtitle">Manage hostel rooms</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="/" class="back" style="margin: 0;">← Dashboard</a>
+                <button class="btn btn-secondary" onclick="loadData()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Refresh
+                </button>
+                <button class="btn btn-primary" onclick="showForm()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+                    Add Room
+                </button>
+            </div>
+        </div>
 
-    <button onclick="loadData()">Refresh</button>
+        <div id="message"></div>
 
-    <table>
+        <!-- Add / Edit Form Modal Card -->
+        <div class="form-container" id="formContainer" style="display: none;">
+            <h2 id="formTitle">Add Room</h2>
+            <form id="dataForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Room ID</label>
+                        <input type="text" id="roomid" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Floor No</label>
+                        <input type="number" id="floorno">
+                    </div>
+                    <div class="form-group">
+                        <label>Type ID</label>
+                        <select id="typeid">
+                <option value="">Select Room Type</option>
+            </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Room Rent</label>
+                        <input type="number" id="roomrent">
+                    </div>
+                    <div class="form-group">
+                        <label>Hostel ID</label>
+                        <select id="hostelid">
+                <option value="">Select Hostel</option>
+            </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="submitButton">Add Room</button>
+                    <button type="button" onclick="resetForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
 
-        <thead>
-            <tr>
+        <!-- Table Directory Card -->
+        <div class="table-card">
+            <div class="table-toolbar">
+                <div class="toolbar-left">
+                    <h2 class="table-title">Rooms Records</h2>
+                    <span class="record-badge" id="recordCountBadge">Records</span>
+                </div>
+                <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Search rooms..." oninput="filterTable(this, 'tableBody')">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
                 <th>Room ID</th>
                 <th>Floor No</th>
                 <th>Type ID</th>
@@ -40,57 +191,17 @@
                 <th>Hostel ID</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-
-        <tbody id="tableBody">
-        </tbody>
-
-    </table>
-
-    <div class="add-button-container">
-        <button onclick="showForm()">+ Add Room</button>
-    </div>
-
-    <div class="form-container" id="formContainer" style="display: none;">
-
-        <h2 id="formTitle">Add Room</h2>
-
-        <form id="dataForm">
-
-            <label>Room ID</label>
-            <input type="text" id="roomid" required>
-
-            <label>Floor No</label>
-            <input type="number" id="floorno">
-
-            <label>Type ID</label>
-            <select id="typeid">
-                <option value="">Select Room Type</option>
-            </select>
-
-            <label>Room Rent</label>
-            <input type="number" id="roomrent">
-
-            <label>Hostel ID</label>
-            <select id="hostelid">
-                <option value="">Select Hostel</option>
-            </select>
-
-            <button type="submit" id="submitButton">
-                Add Room
-            </button>
-
-            <button type="button" onclick="resetForm()">
-                Cancel
-            </button>
-
-        </form>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
     </div>
 
     <script>
-
-        let editingId = null;
+let editingId = null;
         let roomData = [];
 
         async function loadRoomTypes() {
@@ -532,7 +643,6 @@
         loadRoomTypes();
         loadHostels();
         loadData();
-
     </script>
 
 </body>

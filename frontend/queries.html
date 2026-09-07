@@ -4,305 +4,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual SQL Query</title>
+    <title>SQL Query - Hostel Management System</title>
     <link rel="stylesheet" href="style.css">
     <script src="config.js"></script>
+    <script src="app.js"></script>
+    <style>
+        .sql-editor-wrap {
+            position: relative;
+            background: #0b1120;
+            border-radius: var(--radius-lg);
+            border: 1px solid #1e293b;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        .sql-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #1e293b;
+        }
+        .sql-editor-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 0.82rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+        .sql-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+        .sql-shortcut {
+            font-size: 0.75rem;
+            color: #64748b;
+            background: #1e293b;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+        }
+        #sqlQuery {
+            width: 100%;
+            height: 140px;
+            background: transparent;
+            color: #f8fafc;
+            border: none;
+            outline: none;
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: vertical;
+            padding: 0;
+            box-shadow: none;
+        }
+        #sqlQuery::placeholder {
+            color: #475569;
+        }
+        .chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .query-chip {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .query-chip:hover {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #93c5fd;
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
 
-<body>
+<body data-page="queries">
 
-    <nav class="navbar">
-        <a href="/">Home</a>
-        <a href="/students">Students</a>
-        <a href="/hostels">Hostels</a>
-        <a href="/mess">Mess</a>
-        <a href="/payments">Payments</a>
-        <a href="/reports">Reports</a>
-        <a href="/queries">SQL Query</a>
-    </nav>
-
-    <h1>Manual SQL Query</h1>
-
-    <p>Enter an Oracle SQL query and execute it on the database.</p>
-
-    <a href="/" class="back">← Back to Dashboard</a>
-
-    <div class="query-box">
-
-        <h2>Enter SQL Query</h2>
-
-        <textarea id="sqlQuery" placeholder="example:
-select * from student;"></textarea>
-
-        <div class="query-buttons">
-            <button type="button" onclick="executeQuery()">Execute Query</button>
-            <button type="button" onclick="clearQuery()">Clear</button>
-        </div>
-
-        <div class="examples">
-
-            <h3>Example Queries</h3>
-
-            <button type="button" onclick="setQuery(`select * from student;`)">
-                All Students
-            </button>
-
-            <button type="button" onclick="setQuery(`select * from hostel;`)">
-                All Hostels
-            </button>
-
-            <button type="button" onclick="setQuery(`select * from room;`)">
-                All Rooms
-            </button>
-
-            <button type="button" onclick="setQuery(`select * from mess;`)">
-                All Messes
-            </button>
-
-            <button type="button" onclick="setQuery(`select * from payment;`)">
-                All Payments
-            </button>
-
-            <button type="button" onclick="setQuery(`select count(*) as total_students from student;`)">
-                Count Students
-            </button>
-
-            <button type="button" onclick="setQuery(`select studentname, email from student where gender = 'Male';`)">
-                Male Students
-            </button>
-
-            <button type="button"
-                onclick="setQuery(`select s.studentname, r.roomid from student s join room r on s.roomid = r.roomid;`)">
-                Student Rooms
-            </button>
-
-        </div>
-
+    <!-- Ambient Animated Background -->
+    <div class="ambient-canvas" aria-hidden="true">
+        <div class="ambient-grid"></div>
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-orb orb-4"></div>
     </div>
 
-    <div id="message"></div>
+    <!-- Main Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <div class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <div>
+                <span class="brand-title">Hostel Management</span>
+                <span class="brand-badge">Pro</span>
+            </div>
+        </a>
 
-    <div class="result-container">
+        <button class="mobile-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
 
-        <h2>Query Result</h2>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                Dashboard
+            </a>
+            <a href="/students" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                Students
+            </a>
+            <a href="/hostels" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line></svg>
+                Hostels
+            </a>
+            <a href="/mess" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path></svg>
+                Mess
+            </a>
+            <a href="/payments" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                Payments
+            </a>
+            <a href="/reports" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Reports
+            </a>
+            <a href="/queries" class="nav-link active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                SQL Query
+            </a>
+        </div>
 
-        <div id="result">
-            <p>Execute a query to display the result.</p>
+        <div class="nav-actions">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Render API Live</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Subnav Explorer -->
+    <div class="subnav-bar">
+        <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-right: 4px;">Explore:</span>
+        <a href="/students" class="subnav-pill">Students</a>
+        <a href="/student-phones" class="subnav-pill">Student Phones</a>
+        <a href="/hostels" class="subnav-pill">Hostels</a>
+        <a href="/rooms" class="subnav-pill">Rooms</a>
+        <a href="/room-types" class="subnav-pill">Room Types</a>
+        <a href="/wardens" class="subnav-pill">Wardens</a>
+        <a href="/warden-phones" class="subnav-pill">Warden Phones</a>
+        <a href="/mess" class="subnav-pill">Mess</a>
+        <a href="/mess-contacts" class="subnav-pill">Mess Contacts</a>
+        <a href="/meals" class="subnav-pill">Meals</a>
+        <a href="/staff" class="subnav-pill">Staff</a>
+        <a href="/staff-phones" class="subnav-pill">Staff Phones</a>
+        <a href="/suppliers" class="subnav-pill">Suppliers</a>
+        <a href="/supplier-phones" class="subnav-pill">Supplier Phones</a>
+        <a href="/inventory" class="subnav-pill">Inventory</a>
+        <a href="/procures" class="subnav-pill">Procures</a>
+        <a href="/payments" class="subnav-pill">Payments</a>
+        <a href="/payment-details" class="subnav-pill">Payment Details</a>
+        <a href="/reports" class="subnav-pill">Reports</a>
+        <a href="/queries" class="subnav-pill active">SQL Query</a>
+    </div>
+
+    <div class="page-container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <div class="breadcrumb-trail">
+                    <a href="/">Dashboard</a>
+                    <span>/</span>
+                    <span style="color: #cbd5e1; font-weight: 600;">SQL Query</span>
+                </div>
+                <h1 class="page-header-title">SQL Query</h1>
+                <p class="page-header-subtitle">Run SQL queries</p>
+            </div>
+            <div>
+                <a href="/" class="back" style="margin: 0;">← Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Query Editor Card -->
+        <div class="card">
+            <div class="sql-editor-wrap">
+                <div class="sql-editor-header">
+                    <div class="sql-editor-title">
+                        <span class="sql-dot"></span>
+                        <span>SQL Editor</span>
+                    </div>
+                    <span class="sql-shortcut">Ctrl + Enter to run</span>
+                </div>
+                <textarea id="sqlQuery" placeholder="-- Enter SQL query (end with semicolon)
+SELECT * FROM student LIMIT 10;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+                <button type="button" class="btn btn-primary" onclick="executeQuery()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Run Query
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="clearQuery()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Clear Editor
+                </button>
+            </div>
+
+            <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">
+                    Example Queries:
+                </div>
+                <div class="chip-group">
+                    <button type="button" class="query-chip" onclick="setQuery('select * from student;')">
+                        All Students
+                    </button>
+                    <button type="button" class="query-chip" onclick="setQuery('select * from hostel;')">
+                        All Hostels
+                    </button>
+                    <button type="button" class="query-chip" onclick="setQuery('select * from room;')">
+                        All Rooms
+                    </button>
+                    <button type="button" class="query-chip" onclick="setQuery('select * from mess;')">
+                        All Messes
+                    </button>
+                    <button type="button" class="query-chip" onclick="setQuery('select * from payment;')">
+                        All Payments
+                    </button>
+                    <button type="button" class="query-chip" onclick="setQuery('select count(*) as total_students from student;')">
+                        Count Students
+                    </button>
+                    <button type="button" class="query-chip" onclick="setQuery(`select studentname, email from student where gender = 'Male';`)">
+                        Male Students
+                    </button>
+                    <button type="button" class="query-chip" onclick="setQuery(`select s.studentname, r.roomid from student s join room r on s.roomid = r.roomid;`)">
+                        Student Rooms
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="message"></div>
+
+        <!-- Result Container Card -->
+        <div class="table-card">
+            <div class="table-toolbar">
+                <div class="toolbar-left">
+                    <h2 class="table-title">Query Result</h2>
+                    <span class="record-badge" id="resultStatusBadge">Ready</span>
+                </div>
+            </div>
+
+            <div class="table-responsive" id="result">
+                <div style="padding: 32px; text-align: center; color: #94a3b8;">
+                    Run a SQL query above to preview output rows here.
+                </div>
+            </div>
         </div>
 
     </div>
 
     <script>
+        // Keyboard shortcut: Ctrl + Enter to run query
+        document.getElementById("sqlQuery").addEventListener("keydown", function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                executeQuery();
+            }
+        });
 
         function setQuery(query) {
             document.getElementById("sqlQuery").value = query;
+            document.getElementById("sqlQuery").focus();
         }
-
 
         function clearQuery() {
-
             document.getElementById("sqlQuery").value = "";
-
             document.getElementById("result").innerHTML =
-                "<p>Execute a query to display the result.</p>";
-
+                '<div style="padding: 32px; text-align: center; color: #94a3b8;">Execute a SQL query above to preview output rows here.</div>';
             document.getElementById("message").innerHTML = "";
+            document.getElementById("resultStatusBadge").innerText = "Ready";
         }
 
-
         async function executeQuery() {
-
             const sql = document.getElementById("sqlQuery").value.trim();
-
             const message = document.getElementById("message");
             const result = document.getElementById("result");
+            const badge = document.getElementById("resultStatusBadge");
 
             if (!sql) {
-
                 message.innerHTML =
-                    "<p class='error'>Please enter a SQL query.</p>";
-
+                    "<div class='alert alert-error'>Please enter a SQL query.</div>";
                 return;
             }
 
             if (!sql.endsWith(";")) {
-
                 message.innerHTML =
-                    "<p class='error'>Please end the SQL query with a semicolon (;).</p>";
-
+                    "<div class='alert alert-error'>Please end your SQL query with a semicolon (;).</div>";
                 return;
             }
 
             message.innerHTML =
-                "<p>Executing query...</p>";
-
-            result.innerHTML = "";
+                "<div class='alert alert-info'>Running query on database...</div>";
+            badge.innerText = "Running...";
 
             try {
-
                 const response = await fetch("/api/execute-query", {
-
                     method: "POST",
-
                     headers: {
                         "Content-Type": "application/json"
                     },
-
                     body: JSON.stringify({
                         sql: sql
                     })
-
                 });
-
 
                 const data = await response.json();
 
-
                 if (!response.ok || !data.success) {
-
                     message.innerHTML =
-                        "<p class='error'>Error: " +
+                        "<div class='alert alert-error'><strong>Query Error:</strong> " +
                         escapeHtml(data.error || "Query execution failed.") +
-                        "</p>";
-
+                        "</div>";
+                    badge.innerText = "Error";
                     return;
                 }
 
-
                 message.innerHTML =
-                    "<p class='success'>Query executed successfully.</p>";
-
+                    "<div class='alert alert-success'>Query executed successfully.</div>";
+                badge.innerText = "Success";
 
                 if (data.rowsAffected !== undefined) {
-
                     result.innerHTML =
-                        "<p><strong>Rows affected:</strong> " +
+                        "<div style='padding: 24px;'><strong>Rows affected:</strong> " +
                         escapeHtml(String(data.rowsAffected)) +
-                        "</p>";
-
+                        "</div>";
                 } else if (data.rows) {
-
                     displayResult(data.rows);
-
+                    badge.innerText = data.rows.length + " rows returned";
                 } else {
-
                     result.innerHTML =
-                        "<p>Query executed successfully.</p>";
-
+                        "<div style='padding: 24px;'>Query executed successfully.</div>";
                 }
 
             } catch (error) {
-
                 console.error(error);
-
                 message.innerHTML =
-                    "<p class='error'>Unable to execute query.</p>";
-
+                    "<div class='alert alert-error'>Unable to connect to backend server.</div>";
+                badge.innerText = "Connection Failed";
                 result.innerHTML = "";
-
             }
-
         }
 
-
         function displayResult(rows) {
-
             const result = document.getElementById("result");
 
-
             if (!rows || rows.length === 0) {
-
                 result.innerHTML =
-                    "<p>No records found.</p>";
-
+                    "<div style='padding: 32px; text-align: center; color: #94a3b8;'>No records found.</div>";
                 return;
             }
 
-
             const columns = Object.keys(rows[0]);
 
-
             let table = "<table>";
-
-
-            table += "<thead>";
-            table += "<tr>";
-
-
+            table += "<thead><tr>";
             columns.forEach(column => {
-
-                table +=
-                    "<th>" +
-                    escapeHtml(column) +
-                    "</th>";
-
+                table += "<th>" + escapeHtml(column) + "</th>";
             });
-
-
-            table += "</tr>";
-            table += "</thead>";
-
-
-            table += "<tbody>";
-
+            table += "</tr></thead><tbody>";
 
             rows.forEach(row => {
-
                 table += "<tr>";
-
-
                 columns.forEach(column => {
-
                     let value = row[column];
-
 
                     if (value === null || value === undefined) {
                         value = "";
                     }
 
-
-                    if (
-                        typeof value === "string" &&
-                        /^\d{4}-\d{2}-\d{2}T/.test(value)
-                    ) {
-
+                    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
                         value = value.substring(0, 10);
-
                     }
 
-
-                    table +=
-                        "<td>" +
-                        escapeHtml(String(value)) +
-                        "</td>";
-
+                    table += "<td>" + escapeHtml(String(value)) + "</td>";
                 });
-
-
                 table += "</tr>";
-
             });
 
-
-            table += "</tbody>";
-            table += "</table>";
-
-
+            table += "</tbody></table>";
             result.innerHTML = table;
         }
 
-
         function escapeHtml(value) {
-
             return String(value)
                 .replaceAll("&", "&amp;")
                 .replaceAll("<", "&lt;")
                 .replaceAll(">", "&gt;")
                 .replaceAll('"', "&quot;")
                 .replaceAll("'", "&#039;");
-
         }
-
     </script>
 
 </body>

@@ -4,382 +4,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Students</title>
+    <title>Students - Hostel Management System</title>
     <link rel="stylesheet" href="style.css">
     <script src="config.js"></script>
+    <script src="app.js"></script>
 </head>
 
-<body>
+<body data-page="students">
 
+    <!-- Ambient Animated Background -->
+    <div class="ambient-canvas" aria-hidden="true">
+        <div class="ambient-grid"></div>
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-orb orb-4"></div>
+    </div>
+
+    <!-- Main Navigation Bar -->
     <nav class="navbar">
-        <a href="/">Home</a>
-        <a href="/students">Students</a>
-        <a href="/hostels">Hostels</a>
-        <a href="/mess">Mess</a>
-        <a href="/payments">Payments</a>
-        <a href="/reports">Reports</a>
-        <a href="/queries">SQL Query</a>
+        <a href="/" class="nav-brand">
+            <div class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <div>
+                <span class="brand-title">Hostel Management</span>
+                <span class="brand-badge">Pro</span>
+            </div>
+        </a>
+
+        <button class="mobile-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
+
+        <div class="nav-menu">
+            <a href="/" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                Dashboard
+            </a>
+            <a href="/students" class="nav-link active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                Students
+            </a>
+            <a href="/hostels" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line></svg>
+                Hostels
+            </a>
+            <a href="/mess" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path></svg>
+                Mess
+            </a>
+            <a href="/payments" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                Payments
+            </a>
+            <a href="/reports" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Reports
+            </a>
+            <a href="/queries" class="nav-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                SQL Query
+            </a>
+        </div>
+
+        <div class="nav-actions">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Render API Live</span>
+            </div>
+        </div>
     </nav>
 
-    <h1>Student Management</h1>
-
-    <p>Manage student records</p>
-
-    <a href="/" class="back">← Back to Dashboard</a>
-
-    <div id="message"></div>
-
-    <div class="result-container">
-
-        <h2>Student Records</h2>
-
-        <table>
-
-            <thead>
-                <tr>
-                    <th>Student ID</th>
-                    <th>Name</th>
-                    <th>Gender</th>
-                    <th>Date of Birth</th>
-                    <th>Email</th>
-                    <th>Blood Group</th>
-                    <th>Meal Plan</th>
-                    <th>Food Preference</th>
-                    <th>Guardian ID</th>
-                    <th>Room ID</th>
-                    <th>Mess ID</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-
-            <tbody id="studentTable">
-            </tbody>
-
-        </table>
-
+    <!-- Subnav Explorer -->
+    <div class="subnav-bar">
+        <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-right: 4px;">Explore:</span>
+        <a href="/students" class="subnav-pill active">Students</a>
+        <a href="/student-phones" class="subnav-pill">Student Phones</a>
+        <a href="/hostels" class="subnav-pill">Hostels</a>
+        <a href="/rooms" class="subnav-pill">Rooms</a>
+        <a href="/room-types" class="subnav-pill">Room Types</a>
+        <a href="/wardens" class="subnav-pill">Wardens</a>
+        <a href="/warden-phones" class="subnav-pill">Warden Phones</a>
+        <a href="/mess" class="subnav-pill">Mess</a>
+        <a href="/mess-contacts" class="subnav-pill">Mess Contacts</a>
+        <a href="/meals" class="subnav-pill">Meals</a>
+        <a href="/staff" class="subnav-pill">Staff</a>
+        <a href="/staff-phones" class="subnav-pill">Staff Phones</a>
+        <a href="/suppliers" class="subnav-pill">Suppliers</a>
+        <a href="/supplier-phones" class="subnav-pill">Supplier Phones</a>
+        <a href="/inventory" class="subnav-pill">Inventory</a>
+        <a href="/procures" class="subnav-pill">Procures</a>
+        <a href="/payments" class="subnav-pill">Payments</a>
+        <a href="/payment-details" class="subnav-pill">Payment Details</a>
+        <a href="/reports" class="subnav-pill">Reports</a>
+        <a href="/queries" class="subnav-pill">SQL Query</a>
     </div>
 
-    <div class="add-button-container">
-        <button onclick="showAddForm()">+ Add Student</button>
-    </div>
+    <div class="page-container">
 
-    <div class="form-container" id="studentForm" style="display: none;">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <div class="breadcrumb-trail">
+                    <a href="/">Dashboard</a>
+                    <span>/</span>
+                    <span style="color: #cbd5e1; font-weight: 600;">Students</span>
+                </div>
+                <h1 class="page-header-title">Students</h1>
+                <p class="page-header-subtitle">Manage student records</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="/" class="back" style="margin: 0;">← Dashboard</a>
+                <button class="btn btn-secondary" onclick="loadStudents()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Refresh
+                </button>
+                <button class="btn btn-primary" onclick="showAddForm()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+                    Add Student
+                </button>
+            </div>
+        </div>
 
-        <h2 id="formTitle">Add Student</h2>
+        <div id="message"></div>
 
-        <form onsubmit="saveStudent(event)">
+        <!-- Add / Edit Form Modal Card -->
+        <div class="form-container" id="studentForm" style="display: none;">
+            <h2 id="formTitle">Add Student</h2>
+            <form onsubmit="saveStudent(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="studentid">Student ID</label>
+                        <input type="text" id="studentid" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="studentname">Student Name</label>
+                        <input type="text" id="studentname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <input type="text" id="gender">
+                    </div>
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob">
+                    </div>
+                    <div class="form-group">
+                        <label for="bloodgroup">Blood Group</label>
+                        <input type="text" id="bloodgroup">
+                    </div>
+                    <div class="form-group">
+                        <label for="mealplan">Meal Plan</label>
+                        <input type="text" id="mealplan">
+                    </div>
+                    <div class="form-group">
+                        <label for="foodpreference">Food Preference</label>
+                        <input type="text" id="foodpreference">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="guardianid">Guardian ID</label>
+                        <input type="text" id="guardianid">
+                    </div>
+                    <div class="form-group">
+                        <label for="roomid">Room ID</label>
+                        <input type="text" id="roomid">
+                    </div>
+                    <div class="form-group">
+                        <label for="messid">Mess ID</label>
+                        <input type="text" id="messid">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="submitButton">Save Student</button>
+                    <button type="button" onclick="cancelForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
 
-            <label>Student ID</label>
-            <input type="text" id="studentid" required>
-
-            <label>Student Name</label>
-            <input type="text" id="studentname" required>
-
-            <label>Gender</label>
-            <select id="gender" required>
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-            </select>
-
-            <label>Date of Birth</label>
-            <input type="date" id="dob" required>
-
-            <label>Email</label>
-            <input type="email" id="email">
-
-            <label>Blood Group</label>
-            <input type="text" id="bloodgroup">
-
-            <label>Meal Plan</label>
-            <input type="text" id="mealplan">
-
-            <label>Food Preference</label>
-            <input type="text" id="foodpreference">
-
-            <label>Guardian ID</label>
-            <input type="text" id="guardianid">
-
-            <label>Room ID</label>
-            <input type="text" id="roomid" required>
-
-            <label>Mess ID</label>
-            <input type="text" id="messid" required>
-
-            <div>
-                <button type="submit">Save Student</button>
-                <button type="button" onclick="cancelForm()">Cancel</button>
+        <!-- Student Table Directory Card -->
+        <div class="table-card">
+            <div class="table-toolbar">
+                <div class="toolbar-left">
+                    <h2 class="table-title">Student Records</h2>
+                    <span class="record-badge" id="recordCountBadge">Records</span>
+                </div>
+                <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Search students..." oninput="filterTable(this, 'studentTable')">
+                </div>
             </div>
 
-        </form>
+            <div class="table-responsive">
+                <table id="studentTable">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Gender</th>
+                            <th class="cell-dob" style="white-space: nowrap;">DOB</th>
+                            <th>Blood Group</th>
+                            <th>Meal Plan</th>
+                            <th>Food Preference</th>
+                            <th>Email</th>
+                            <th>Guardian ID</th>
+                            <th>Room ID</th>
+                            <th>Mess ID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
     </div>
 
     <script>
-
         let students = [];
         let editingStudentId = null;
 
         function loadStudents() {
-
             fetch("/api/students")
                 .then(response => response.json())
                 .then(data => {
-
                     students = data;
-                    displayStudents(students);
-
+                    renderStudents();
                 })
                 .catch(error => {
-
                     console.error(error);
-
                     document.getElementById("message").innerHTML =
-                        "<p class='error'>Unable to load students.</p>";
-
+                        "<div class='alert alert-error'>Unable to load students.</div>";
                 });
         }
 
-        function displayStudents(data) {
-
-            const table = document.getElementById("studentTable");
-
+        function renderStudents() {
+            const table = document.querySelector("#studentTable tbody");
             table.innerHTML = "";
 
-            if (data.length === 0) {
+            const badge = document.getElementById("recordCountBadge");
+            if (badge) badge.innerText = `${students.length} students`;
 
-                table.innerHTML =
-                    "<tr><td colspan='12'>No students found.</td></tr>";
-
+            if (students.length === 0) {
+                table.innerHTML = "<tr><td colspan='12'>No student records found.</td></tr>";
                 return;
             }
 
-            data.forEach(student => {
-
+            students.forEach(student => {
                 const row = document.createElement("tr");
 
                 row.innerHTML = `
-
-                    <td>${escapeHtml(student.studentid)}</td>
-
-                    <td>${escapeHtml(student.studentname)}</td>
-
+                    <td><strong>${escapeHtml(student.studentid || "")}</strong></td>
+                    <td>${escapeHtml(student.studentname || "")}</td>
                     <td>${escapeHtml(student.gender || "")}</td>
-
-                    <td>${formatDate(student.dob)}</td>
-
-                    <td>${escapeHtml(student.email || "")}</td>
-
+                    <td class="cell-dob" style="white-space: nowrap;">${escapeHtml(formatDate(student.dob))}</td>
                     <td>${escapeHtml(student.bloodgroup || "")}</td>
-
                     <td>${escapeHtml(student.mealplan || "")}</td>
-
                     <td>${escapeHtml(student.foodpreference || "")}</td>
-
+                    <td>${escapeHtml(student.email || "")}</td>
                     <td>${escapeHtml(student.guardianid || "")}</td>
-
                     <td>${escapeHtml(student.roomid || "")}</td>
-
                     <td>${escapeHtml(student.messid || "")}</td>
-
                     <td>
-
-                        <button onclick="editStudent('${escapeJs(student.studentid)}')">
-                            Edit
-                        </button>
-
-                        <button onclick="deleteStudent('${escapeJs(student.studentid)}')">
-                            Delete
-                        </button>
-
+                        <button class="btn-edit" onclick="editStudent('${escapeJs(student.studentid)}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteStudent('${escapeJs(student.studentid)}')">Delete</button>
                     </td>
-
                 `;
 
                 table.appendChild(row);
-
             });
         }
 
         function showAddForm() {
-
             editingStudentId = null;
-
-            document.getElementById("formTitle").textContent =
-                "Add Student";
-
-            document.getElementById("studentForm").style.display =
-                "block";
-
+            document.getElementById("formTitle").textContent = "Add Student";
+            document.getElementById("studentForm").style.display = "block";
             document.getElementById("studentid").disabled = false;
-
             clearForm();
-
             window.scrollTo({
                 top: document.getElementById("studentForm").offsetTop,
                 behavior: "smooth"
             });
-
         }
 
         function editStudent(id) {
-
-            const student =
-                students.find(s => s.studentid === id);
-
-            if (!student) {
-                return;
-            }
+            const student = students.find(s => s.studentid === id);
+            if (!student) return;
 
             editingStudentId = id;
+            document.getElementById("formTitle").textContent = "Edit Student";
+            document.getElementById("studentForm").style.display = "block";
 
-            document.getElementById("formTitle").textContent =
-                "Edit Student";
-
-            document.getElementById("studentForm").style.display =
-                "block";
-
-            document.getElementById("studentid").value =
-                student.studentid;
-
+            document.getElementById("studentid").value = student.studentid;
             document.getElementById("studentid").disabled = true;
-
-            document.getElementById("studentname").value =
-                student.studentname || "";
-
-            document.getElementById("gender").value =
-                student.gender || "";
-
-            document.getElementById("dob").value =
-                formatDateForInput(student.dob);
-
-            document.getElementById("email").value =
-                student.email || "";
-
-            document.getElementById("bloodgroup").value =
-                student.bloodgroup || "";
-
-            document.getElementById("mealplan").value =
-                student.mealplan || "";
-
-            document.getElementById("foodpreference").value =
-                student.foodpreference || "";
-
-            document.getElementById("guardianid").value =
-                student.guardianid || "";
-
-            document.getElementById("roomid").value =
-                student.roomid || "";
-
-            document.getElementById("messid").value =
-                student.messid || "";
+            document.getElementById("studentname").value = student.studentname || "";
+            document.getElementById("gender").value = student.gender || "";
+            document.getElementById("dob").value = formatDateForInput(student.dob);
+            document.getElementById("email").value = student.email || "";
+            document.getElementById("bloodgroup").value = student.bloodgroup || "";
+            document.getElementById("mealplan").value = student.mealplan || "";
+            document.getElementById("foodpreference").value = student.foodpreference || "";
+            document.getElementById("guardianid").value = student.guardianid || "";
+            document.getElementById("roomid").value = student.roomid || "";
+            document.getElementById("messid").value = student.messid || "";
 
             window.scrollTo({
                 top: document.getElementById("studentForm").offsetTop,
                 behavior: "smooth"
             });
-
         }
 
         function saveStudent(event) {
-
             event.preventDefault();
 
             const student = {
-
-                studentid:
-                    document.getElementById("studentid").value.trim(),
-
-                studentname:
-                    document.getElementById("studentname").value.trim(),
-
-                gender:
-                    document.getElementById("gender").value,
-
-                dob:
-                    document.getElementById("dob").value,
-
-                email:
-                    document.getElementById("email").value.trim(),
-
-                bloodgroup:
-                    document.getElementById("bloodgroup").value.trim(),
-
-                mealplan:
-                    document.getElementById("mealplan").value.trim(),
-
-                foodpreference:
-                    document.getElementById("foodpreference").value.trim(),
-
-                guardianid:
-                    document.getElementById("guardianid").value.trim(),
-
-                roomid:
-                    document.getElementById("roomid").value.trim(),
-
-                messid:
-                    document.getElementById("messid").value.trim()
-
+                studentid: document.getElementById("studentid").value.trim(),
+                studentname: document.getElementById("studentname").value.trim(),
+                gender: document.getElementById("gender").value,
+                dob: document.getElementById("dob").value,
+                email: document.getElementById("email").value.trim(),
+                bloodgroup: document.getElementById("bloodgroup").value.trim(),
+                mealplan: document.getElementById("mealplan").value.trim(),
+                foodpreference: document.getElementById("foodpreference").value.trim(),
+                guardianid: document.getElementById("guardianid").value.trim(),
+                roomid: document.getElementById("roomid").value.trim(),
+                messid: document.getElementById("messid").value.trim()
             };
 
-            const method =
-                editingStudentId ? "PUT" : "POST";
-
-            const url =
-                editingStudentId
-                    ? `/api/students/${encodeURIComponent(editingStudentId)}`
-                    : "/api/students";
+            const method = editingStudentId ? "PUT" : "POST";
+            const url = editingStudentId ? `/api/students/${encodeURIComponent(editingStudentId)}` : "/api/students";
 
             fetch(url, {
-
                 method: method,
-
                 headers: {
                     "Content-Type": "application/json"
                 },
-
                 body: JSON.stringify(student)
-
             })
-
                 .then(response => response.json())
-
                 .then(data => {
-
                     if (data.error) {
-
                         document.getElementById("message").innerHTML =
-                            "<p class='error'>" +
-                            escapeHtml(data.error) +
-                            "</p>";
-
+                            "<div class='alert alert-error'>" + escapeHtml(data.error) + "</div>";
                         return;
                     }
 
                     document.getElementById("message").innerHTML =
-                        "<p class='success'>" +
-                        escapeHtml(data.message) +
-                        "</p>";
+                        "<div class='alert alert-success'>" + escapeHtml(data.message) + "</div>";
 
                     cancelForm();
-
                     loadStudents();
-
                 })
-
                 .catch(error => {
-
                     console.error(error);
-
                     document.getElementById("message").innerHTML =
-                        "<p class='error'>Unable to save student.</p>";
-
+                        "<div class='alert alert-error'>Unable to save student.</div>";
                 });
-
         }
 
         function deleteStudent(id) {
-
             if (!confirm("Are you sure you want to delete this student?")) {
                 return;
             }
@@ -387,56 +376,34 @@
             fetch(`/api/students/${encodeURIComponent(id)}`, {
                 method: "DELETE"
             })
-
                 .then(response => response.json())
-
                 .then(data => {
-
                     if (data.error) {
-
                         document.getElementById("message").innerHTML =
-                            "<p class='error'>" +
-                            escapeHtml(data.error) +
-                            "</p>";
-
+                            "<div class='alert alert-error'>" + escapeHtml(data.error) + "</div>";
                         return;
                     }
 
                     document.getElementById("message").innerHTML =
-                        "<p class='success'>" +
-                        escapeHtml(data.message) +
-                        "</p>";
+                        "<div class='alert alert-success'>" + escapeHtml(data.message) + "</div>";
 
                     loadStudents();
-
                 })
-
                 .catch(error => {
-
                     console.error(error);
-
                     document.getElementById("message").innerHTML =
-                        "<p class='error'>Unable to delete student.</p>";
-
+                        "<div class='alert alert-error'>Unable to delete student.</div>";
                 });
-
         }
 
         function cancelForm() {
-
-            document.getElementById("studentForm").style.display =
-                "none";
-
+            document.getElementById("studentForm").style.display = "none";
             document.getElementById("studentid").disabled = false;
-
             clearForm();
-
             editingStudentId = null;
-
         }
 
         function clearForm() {
-
             document.getElementById("studentid").value = "";
             document.getElementById("studentname").value = "";
             document.getElementById("gender").value = "";
@@ -448,53 +415,36 @@
             document.getElementById("guardianid").value = "";
             document.getElementById("roomid").value = "";
             document.getElementById("messid").value = "";
-
         }
 
         function formatDate(value) {
-
-            if (!value) {
-                return "";
-            }
-
-            if (
-                typeof value === "string" &&
-                value.includes("T")
-            ) {
+            if (!value) return "";
+            if (typeof value === "string" && value.includes("T")) {
                 return value.substring(0, 10);
             }
-
             return value;
-
         }
 
         function formatDateForInput(value) {
-
             return formatDate(value);
-
         }
 
         function escapeHtml(value) {
-
             return String(value)
                 .replaceAll("&", "&amp;")
                 .replaceAll("<", "&lt;")
                 .replaceAll(">", "&gt;")
                 .replaceAll('"', "&quot;")
                 .replaceAll("'", "&#039;");
-
         }
 
         function escapeJs(value) {
-
             return String(value)
                 .replaceAll("\\", "\\\\")
                 .replaceAll("'", "\\'");
-
         }
 
         loadStudents();
-
     </script>
 
 </body>

@@ -6,6 +6,12 @@ function loadReport(url, tableId) {
 
             tbody.innerHTML = "";
 
+            if (!data || data.length === 0) {
+                const colCount = document.querySelector(`#${tableId} thead tr`)?.children.length || 6;
+                tbody.innerHTML = `<tr><td colspan='${colCount}'>No report records found.</td></tr>`;
+                return;
+            }
+
             data.forEach(row => {
                 const tr = document.createElement("tr");
 
