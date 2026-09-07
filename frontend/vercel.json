@@ -1,0 +1,28 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/students", "destination": "/students.html" },
+    { "source": "/student-phones", "destination": "/student-phones.html" },
+    { "source": "/students-phones", "destination": "/student-phones.html" },
+    { "source": "/hostels", "destination": "/hostels.html" },
+    { "source": "/rooms", "destination": "/rooms.html" },
+    { "source": "/room-types", "destination": "/room-types.html" },
+    { "source": "/wardens", "destination": "/wardens.html" },
+    { "source": "/warden-phones", "destination": "/warden-phones.html" },
+    { "source": "/mess", "destination": "/mess.html" },
+    { "source": "/mess-contacts", "destination": "/mess-contacts.html" },
+    { "source": "/meals", "destination": "/meals.html" },
+    { "source": "/staff", "destination": "/staff.html" },
+    { "source": "/staff-phones", "destination": "/staff-phones.html" },
+    { "source": "/suppliers", "destination": "/suppliers.html" },
+    { "source": "/supplier-phones", "destination": "/supplier-phones.html" },
+    { "source": "/inventory", "destination": "/inventory.html" },
+    { "source": "/procures", "destination": "/procures.html" },
+    { "source": "/payments", "destination": "/payments.html" },
+    { "source": "/payment-details", "destination": "/payment-details.html" },
+    { "source": "/reports", "destination": "/reports.html" },
+    { "source": "/queries", "destination": "/queries.html" }
+  ]
+}
