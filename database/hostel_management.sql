@@ -116,6 +116,15 @@ insert into student values ('S1003','Rohan Verma','Male',to_date('15-01-2005','d
 insert into student values ('S1004','Ananya Iyer','Female',to_date('30-09-2005','dd-mm-yyyy'),'ananya.i@univ.edu','AB+','Standard','Veg','S1002','R201','M2');
 insert into student values ('S1005','Vikram Singh','Male',to_date('05-11-2004','dd-mm-yyyy'),'vikram.s@univ.edu','B-','Premium','Non-Veg','S1001','R202','M3');
 
+create table student_phone (studentid varchar2(10), phoneno varchar2(20), primary key (studentid,phoneno), foreign key (studentid) references student(studentid) on delete cascade);
+
+insert into student_phone values ('S1001','9876543210');
+insert into student_phone values ('S1001','9876543211');
+insert into student_phone values ('S1002','9876543212');
+insert into student_phone values ('S1003','9876543213');
+insert into student_phone values ('S1004','9876543214');
+insert into student_phone values ('S1005','9876543215');
+
 create table payment (paymentid varchar2(10) primary key, studentid varchar2(10) not null, amount number, paymentmethod varchar2(30), status varchar2(200), paymentdate date, foreign key (studentid) references student(studentid));
 
 insert into payment values ('PAY1001','S1001',12500,'NetBanking','Successful',to_date('05-08-2026','dd-mm-yyyy'));

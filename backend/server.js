@@ -1,71 +1,94 @@
 const express = require("express");
-const { Pool } = require("pg");
+const oracledb = require("oracledb");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
-/* postgresql database configuration (supabase compatible) */
+/* oracle database configuration */
 
-const poolConfig = process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.DB_SSL === "false" ? false : { rejectUnauthorized: false }
+oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
+oracledb.autoCommit = true;
+
+let pool = null;
+
+async function getPool() {
+    if (!pool) {
+        pool = await oracledb.createPool({
+            user: process.env.ORACLE_USER || "HOSTELDB",
+            password: process.env.ORACLE_PASSWORD,
+            connectString: process.env.ORACLE_CONNECT_STRING || "localhost:1521/XEPDB1",
+            poolMin: 1,
+            poolMax: 10,
+            poolIncrement: 1
+        });
     }
-    : {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
-        ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
-    };
-
-const pool = new Pool(poolConfig);
-
-pool.on("error", (err) => {
-    console.error("Unexpected error on idle PostgreSQL client", err);
-});
+    return pool;
+}
 
 /* database helper functions */
 
-function convertNamedBinds(sql, binds) {
-    if (!binds || Array.isArray(binds)) {
-        return { text: sql, values: binds || [] };
+function sanitizeBinds(binds) {
+    if (!binds || typeof binds !== "object") return {};
+    const sanitized = {};
+    for (const key of Object.keys(binds)) {
+        let val = binds[key];
+        if (val === undefined) {
+            val = null;
+        } else if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
+            val = val.substring(0, 10);
+        }
+        sanitized[key] = val;
     }
-    const values = [];
-    const nameToIndex = {};
-
-    const text = sql.replace(/:([a-zA-Z0-9_]+)/g, (match, paramName) => {
-        if (!nameToIndex[paramName]) {
-            const val = binds[paramName];
-            values.push(val === undefined || val === "" ? null : val);
-            nameToIndex[paramName] = values.length;
-        }
-        return `$${nameToIndex[paramName]}`;
-    });
-
-    return { text, values };
+    return sanitized;
 }
 
-async function runQuery(sql) {
-    // Clean trailing semicolons and Oracle "from dual" clauses
-    const cleanSql = sql.replace(/;+\s*$/, "").replace(/\s+from\s+dual\s*$/i, "");
-    const result = await pool.query(cleanSql);
+async function runQuery(sql, binds = {}) {
+    const cleanSql = sql.replace(/;+\s*$/, "");
+    const p = await getPool();
+    let conn;
+    try {
+        conn = await p.getConnection();
+        const sanitized = sanitizeBinds(binds);
+        const result = await conn.execute(cleanSql, sanitized);
 
-    return result.rows.map(row => {
-        const newRow = {};
+        if (!result.rows) return [];
 
-        for (const key in row) {
-            newRow[key.toLowerCase()] = row[key];
+        return result.rows.map(row => {
+            const newRow = {};
+            for (const key in row) {
+                const val = row[key];
+                if (val instanceof Date) {
+                    const year = val.getFullYear();
+                    const month = String(val.getMonth() + 1).padStart(2, "0");
+                    const day = String(val.getDate()).padStart(2, "0");
+                    newRow[key.toLowerCase()] = `${year}-${month}-${day}`;
+                } else {
+                    newRow[key.toLowerCase()] = val;
+                }
+            }
+            return newRow;
+        });
+    } finally {
+        if (conn) {
+            try { await conn.close(); } catch (e) { console.error("Error closing connection", e); }
         }
-
-        return newRow;
-    });
+    }
 }
 
-async function executeQuery(sql, binds) {
-    const { text, values } = convertNamedBinds(sql, binds);
-    await pool.query(text, values);
+async function executeQuery(sql, binds = {}) {
+    const cleanSql = sql.replace(/;+\s*$/, "");
+    const p = await getPool();
+    let conn;
+    try {
+        conn = await p.getConnection();
+        const sanitized = sanitizeBinds(binds);
+        const result = await conn.execute(cleanSql, sanitized, { autoCommit: true });
+        return result;
+    } finally {
+        if (conn) {
+            try { await conn.close(); } catch (e) { console.error("Error closing connection", e); }
+        }
+    }
 }
 
 /* express and static frontend setup */
@@ -166,20 +189,20 @@ app.get("/queries", (req, res) => {
 /* health check and connection test */
 
 app.get("/api/health", async (req, res) => {
-    if (!process.env.DATABASE_URL && !process.env.DB_HOST) {
+    if (!process.env.ORACLE_PASSWORD && !process.env.ORACLE_USER) {
         return res.status(503).json({
             status: "not_configured",
             database: "disconnected",
-            message: "DATABASE_URL is not set in environment or .env file"
+            message: "ORACLE_USER or ORACLE_PASSWORD is not set in environment or .env file"
         });
     }
 
     try {
-        const result = await pool.query("SELECT 1 as connected");
+        const rows = await runQuery("SELECT 1 as connected FROM dual");
         res.json({
             status: "ok",
             database: "connected",
-            result: result.rows[0]
+            result: rows[0]
         });
     } catch (err) {
         res.status(500).json({
@@ -385,6 +408,9 @@ app.get("/api/student-phones", async (req, res) => {
         res.json(rows);
 
     } catch (err) {
+        if (err.message && err.message.includes("ORA-00942")) {
+            return res.json([]);
+        }
         console.error(err);
         res.status(500).json({
             error: "student phone query failed",
@@ -2449,32 +2475,31 @@ app.post("/api/execute-query", async (req, res) => {
             });
         }
 
-        sql = sql.trim().replace(/;+\s*$/, "");
+        const trimmed = sql.trim().replace(/;+\s*$/, "");
 
-        const result = await pool.query(sql);
-
-        if (result.rows && result.rows.length > 0) {
-            const rows = result.rows.map(row => {
-                const newRow = {};
-
-                for (const key in row) {
-                    newRow[key.toLowerCase()] = row[key];
-                }
-
-                return newRow;
-            });
-
-            return res.json({
-                success: true,
-                rows: rows
+        // Enforce read-only SELECT queries
+        const stripped = trimmed.replace(/\/\*[\s\S]*?\*\/|--.*$/gm, "").trim();
+        const firstWord = stripped.split(/\s+/)[0].toUpperCase();
+        if (firstWord !== "SELECT" && firstWord !== "WITH") {
+            return res.status(400).json({
+                success: false,
+                error: "Only read-only SELECT queries are permitted in the SQL query console."
             });
         }
 
-        res.json({
+        const forbidden = /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|EXEC|EXECUTE|GRANT|REVOKE|MERGE)\b/i;
+        if (forbidden.test(stripped)) {
+            return res.status(400).json({
+                success: false,
+                error: "Only read-only SELECT queries are permitted in the SQL query console."
+            });
+        }
+
+        const rows = await runQuery(trimmed);
+
+        return res.json({
             success: true,
-            rows: [],
-            rowsAffected: result.rowCount || 0,
-            message: "query executed successfully"
+            rows: rows
         });
 
     } catch (err) {
@@ -2489,6 +2514,17 @@ app.post("/api/execute-query", async (req, res) => {
 
 /* server start */
 
-app.listen(port, () => {
-    console.log(`server running at http://localhost:${port}`);
-});
+async function startServer() {
+    try {
+        await getPool();
+        console.log("Connected to Oracle Database successfully");
+    } catch (err) {
+        console.warn("Notice: Oracle pool initialization pending or failed:", err.message);
+    }
+
+    app.listen(port, () => {
+        console.log(`server running at http://localhost:${port}`);
+    });
+}
+
+startServer();
