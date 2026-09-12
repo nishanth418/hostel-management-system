@@ -1,94 +1,90 @@
 const express = require("express");
-const oracledb = require("oracledb");
+const { Pool, types } = require("pg");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
-/* oracle database configuration */
+// Ensure date columns are parsed as YYYY-MM-DD strings without UTC timezone shifting
+types.setTypeParser(1082, (val) => val);
 
-oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
-oracledb.autoCommit = true;
+/* postgresql database configuration (supabase compatible) */
 
-let pool = null;
-
-async function getPool() {
-    if (!pool) {
-        pool = await oracledb.createPool({
-            user: process.env.ORACLE_USER || "HOSTELDB",
-            password: process.env.ORACLE_PASSWORD,
-            connectString: process.env.ORACLE_CONNECT_STRING || "localhost:1521/XEPDB1",
-            poolMin: 1,
-            poolMax: 10,
-            poolIncrement: 1
-        });
+const poolConfig = process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.DB_SSL === "false" ? false : { rejectUnauthorized: false }
     }
-    return pool;
-}
+    : {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+    };
+
+const pool = new Pool(poolConfig);
+
+pool.on("error", (err) => {
+    console.error("Unexpected error on idle PostgreSQL client", err);
+});
 
 /* database helper functions */
 
-function sanitizeBinds(binds) {
-    if (!binds || typeof binds !== "object") return {};
-    const sanitized = {};
-    for (const key of Object.keys(binds)) {
-        let val = binds[key];
-        if (val === undefined) {
-            val = null;
-        } else if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
-            val = val.substring(0, 10);
-        }
-        sanitized[key] = val;
+function convertNamedBinds(sql, binds) {
+    if (!binds || Array.isArray(binds)) {
+        return { text: sql, values: binds || [] };
     }
-    return sanitized;
+    const values = [];
+    const nameToIndex = {};
+
+    const text = sql.replace(/:([a-zA-Z0-9_]+)/g, (match, paramName) => {
+        if (!nameToIndex[paramName]) {
+            let val = binds[paramName];
+            if (val === undefined || val === "") {
+                val = null;
+            } else if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
+                val = val.substring(0, 10);
+            }
+            values.push(val);
+            nameToIndex[paramName] = values.length;
+        }
+        return `$${nameToIndex[paramName]}`;
+    });
+
+    return { text, values };
 }
 
 async function runQuery(sql, binds = {}) {
-    const cleanSql = sql.replace(/;+\s*$/, "");
-    const p = await getPool();
-    let conn;
-    try {
-        conn = await p.getConnection();
-        const sanitized = sanitizeBinds(binds);
-        const result = await conn.execute(cleanSql, sanitized);
+    // Clean trailing semicolons and Oracle "from dual" clauses
+    const cleanSql = sql.replace(/;+\s*$/, "").replace(/\s+from\s+dual\s*$/i, "");
+    const { text, values } = convertNamedBinds(cleanSql, binds);
+    const result = await pool.query(text, values);
 
-        if (!result.rows) return [];
+    if (!result.rows) return [];
 
-        return result.rows.map(row => {
-            const newRow = {};
-            for (const key in row) {
-                const val = row[key];
-                if (val instanceof Date) {
-                    const year = val.getFullYear();
-                    const month = String(val.getMonth() + 1).padStart(2, "0");
-                    const day = String(val.getDate()).padStart(2, "0");
-                    newRow[key.toLowerCase()] = `${year}-${month}-${day}`;
-                } else {
-                    newRow[key.toLowerCase()] = val;
-                }
+    return result.rows.map(row => {
+        const newRow = {};
+        for (const key in row) {
+            let val = row[key];
+            if (val instanceof Date) {
+                const year = val.getFullYear();
+                const month = String(val.getMonth() + 1).padStart(2, "0");
+                const day = String(val.getDate()).padStart(2, "0");
+                val = `${year}-${month}-${day}`;
+            } else if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
+                val = val.substring(0, 10);
             }
-            return newRow;
-        });
-    } finally {
-        if (conn) {
-            try { await conn.close(); } catch (e) { console.error("Error closing connection", e); }
+            newRow[key.toLowerCase()] = val;
         }
-    }
+        return newRow;
+    });
 }
 
 async function executeQuery(sql, binds = {}) {
     const cleanSql = sql.replace(/;+\s*$/, "");
-    const p = await getPool();
-    let conn;
-    try {
-        conn = await p.getConnection();
-        const sanitized = sanitizeBinds(binds);
-        const result = await conn.execute(cleanSql, sanitized, { autoCommit: true });
-        return result;
-    } finally {
-        if (conn) {
-            try { await conn.close(); } catch (e) { console.error("Error closing connection", e); }
-        }
-    }
+    const { text, values } = convertNamedBinds(cleanSql, binds);
+    return await pool.query(text, values);
 }
 
 /* express and static frontend setup */
@@ -189,20 +185,20 @@ app.get("/queries", (req, res) => {
 /* health check and connection test */
 
 app.get("/api/health", async (req, res) => {
-    if (!process.env.ORACLE_PASSWORD && !process.env.ORACLE_USER) {
+    if (!process.env.DATABASE_URL && !process.env.DB_HOST) {
         return res.status(503).json({
             status: "not_configured",
             database: "disconnected",
-            message: "ORACLE_USER or ORACLE_PASSWORD is not set in environment or .env file"
+            message: "DATABASE_URL is not set in environment or .env file"
         });
     }
 
     try {
-        const rows = await runQuery("SELECT 1 as connected FROM dual");
+        const result = await pool.query("SELECT 1 as connected");
         res.json({
             status: "ok",
             database: "connected",
-            result: rows[0]
+            result: result.rows[0]
         });
     } catch (err) {
         res.status(500).json({
@@ -408,9 +404,6 @@ app.get("/api/student-phones", async (req, res) => {
         res.json(rows);
 
     } catch (err) {
-        if (err.message && err.message.includes("ORA-00942")) {
-            return res.json([]);
-        }
         console.error(err);
         res.status(500).json({
             error: "student phone query failed",
@@ -2514,17 +2507,6 @@ app.post("/api/execute-query", async (req, res) => {
 
 /* server start */
 
-async function startServer() {
-    try {
-        await getPool();
-        console.log("Connected to Oracle Database successfully");
-    } catch (err) {
-        console.warn("Notice: Oracle pool initialization pending or failed:", err.message);
-    }
-
-    app.listen(port, () => {
-        console.log(`server running at http://localhost:${port}`);
-    });
-}
-
-startServer();
+app.listen(port, () => {
+    console.log(`server running at http://localhost:${port}`);
+});
